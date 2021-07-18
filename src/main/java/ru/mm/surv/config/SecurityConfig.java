@@ -26,13 +26,13 @@ public class SecurityConfig {
         @Override
         protected void configure(HttpSecurity http) throws Exception {
             http
-                    .antMatcher("stream/webm/publish/**")
+                    .antMatcher("/stream/webm/publish/**")
                     .httpBasic()
                     .and()
                     .csrf()
                     .disable()
                     .authorizeRequests()
-                    .antMatchers("stream/webm/publish/**").hasRole("PUBLISHER");
+                    .antMatchers("/stream/webm/publish/**").hasRole("PUBLISHER");
         }
     }
 
@@ -51,8 +51,8 @@ public class SecurityConfig {
                     .csrf()
                     .disable()
                     .authorizeRequests()
-                    .antMatchers("stream/webm/**").hasRole("CONSUMER")
-                    .antMatchers("stream/hls/**").hasRole("CONSUMER")
+                    .antMatchers("/stream/webm/**").hasRole("CONSUMER")
+                    .antMatchers("/stream/hls/**").hasRole("CONSUMER")
                     .antMatchers("/").hasRole("CONSUMER")
                     .anyRequest().permitAll()
                     .and()
