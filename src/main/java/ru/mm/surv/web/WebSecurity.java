@@ -58,6 +58,7 @@ public class WebSecurity {
                     .disable()
                     .authorizeRequests()
                     .antMatchers("/consume/**").hasRole("CONSUMER")
+                    .antMatchers("/").hasRole("CONSUMER")
                     .anyRequest().permitAll()
                     .and()
                     .formLogin().permitAll()

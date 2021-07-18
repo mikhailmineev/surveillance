@@ -41,7 +41,7 @@ public class Ffmpeg {
                 "Authorization: Basic cHVibGlzaGVyOmdkc2ZnZXJ0Z2RmZ3M=\r\n",
                 "-f",
                 "webm",
-                "http://127.0.0.1:8080/publish/first"
+                "https://127.0.0.1:8443/publish/first"
     ).start();
         new Thread(() -> {
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));){
