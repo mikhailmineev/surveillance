@@ -35,6 +35,7 @@ public class Web {
     }
 
     @PostMapping("publish/{streamID}")
+    @ResponseBody
     public void publish(@PathVariable String streamID, HttpServletRequest request) throws HTTPException, IOException {
         // stopping stream if already isRunning
         ControlledStream stream = streams.get(streamID);

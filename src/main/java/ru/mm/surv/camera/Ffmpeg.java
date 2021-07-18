@@ -37,8 +37,8 @@ public class Ffmpeg {
                 "libvpx",
                 "-vb",
                 "448k",
-                //"-headers",
-                //"Authorization: Basic cHVibGlzaGVyOmdkc2ZnZXJ0Z2RmZ3M=\r\n",
+                "-headers",
+                "Authorization: Basic cHVibGlzaGVyOmdkc2ZnZXJ0Z2RmZ3M=\r\n",
                 "-f",
                 "webm",
                 "http://127.0.0.1:8080/publish/first"
