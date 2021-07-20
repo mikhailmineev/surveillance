@@ -7,10 +7,12 @@
 </head>
 <body>
 <h1>Surveillance</h1>
-<h2>Camera 1</h2>
-<video controls>
-    <source src="/stream/webm/first/stream.webm" type = "video/webm">
-    <source src="/stream/hls/first/stream.m3u8">
-</video>
+<div th:each="recorder : ${recorders}">
+    <h2>Camera <span th:text="${recorder}"> recorderName</span></h2>
+    <video controls>
+        <source th:src="@{/stream/webm/{recorder}/stream.webm(recorder=${recorder})}" type = "video/webm">
+        <source th:src="@{/stream/hls/{recorder}/stream.m3u8(recorder=${recorder})}">
+    </video>
+</div>
 </body>
 </html>

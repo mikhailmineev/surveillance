@@ -1,4 +1,4 @@
-package ru.mm.surv.camera;
+package ru.mm.surv.capture;
 
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
@@ -8,9 +8,9 @@ import org.springframework.stereotype.Component;
 public class ApplicationStartup
         implements ApplicationListener<ApplicationReadyEvent> {
 
-    private final Ffmpeg ffmpeg;
+    private final FfmpegManager ffmpeg;
 
-    public ApplicationStartup(Ffmpeg ffmpeg) {
+    public ApplicationStartup(FfmpegManager ffmpeg) {
         this.ffmpeg = ffmpeg;
     }
 

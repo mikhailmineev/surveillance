@@ -1,10 +1,7 @@
-package ru.mm.surv.camera;
+package ru.mm.surv.capture;
 
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 
 import javax.annotation.PreDestroy;
 import java.io.*;
@@ -14,7 +11,6 @@ import java.util.Arrays;
 import java.util.concurrent.*;
 
 @Slf4j
-@Component
 public class Ffmpeg {
 
     public static final String FFMPEG_BINARY = "C:\\Users\\mikev\\Downloads\\ffmpeg-4.4-full_build\\bin\\ffmpeg.exe";
@@ -22,14 +18,20 @@ public class Ffmpeg {
 
     private final ScheduledExecutorService loggingExecutor;
     private final String streamName;
+    private final String webmAuthorization;
+    private final String webmPublishUrl;
     private final String hlsFile;
+    private final String captureConfig;
 
     private Process process;
 
-    @Autowired
-    public Ffmpeg(@Value("${ffmpeg.hls.folder}") Path folder) throws IOException {
+    @SneakyThrows
+    public Ffmpeg(String streamName, String captureConfig, Path folder) {
         this.loggingExecutor = new ScheduledThreadPoolExecutor(2);
-        this.streamName = "first";
+        this.streamName = streamName;
+        this.captureConfig = captureConfig;
+        this.webmAuthorization = "Authorization: Basic cHVibGlzaGVyOmdkc2ZnZXJ0Z2RmZ3M=";
+        this.webmPublishUrl = "https://127.0.0.1:8443/stream/webm/publish/" + streamName;
         Path streamFolder = folder.resolve(streamName);
         Files.createDirectories(streamFolder);
         Files.walk(streamFolder)
@@ -45,16 +47,19 @@ public class Ffmpeg {
                 FFMPEG_BINARY,
                 "-f", "dshow",
                 "-s", "320x240",
+                "-framerate", "16",
+                "-i", captureConfig,
                 "-r", "16",
-                "-i", "video=USB Video Device:audio=Microphone (USB Audio Device)",
+                "-async", "1",
+                "-vsync", "1",
                 "-g", "16",
                 "-vcodec", "libvpx",
                 "-vb", "448k",
                 "-acodec", "libvorbis",
                 "-ab", "64k",
                 "-f", "webm",
-                "-headers", "Authorization: Basic cHVibGlzaGVyOmdkc2ZnZXJ0Z2RmZ3M=\r\n",
-                "https://127.0.0.1:8443/stream/webm/publish/" + streamName,
+                "-headers", webmAuthorization + "\r\n",
+                webmPublishUrl,
                 "-c:v", "h264",
                 "-crf", "21",
                 "-preset", "veryfast",
@@ -70,16 +75,19 @@ public class Ffmpeg {
                 "-hls_flags", "delete_segments",
                 hlsFile
         };
-        log.debug("Ffmpeg arguments: {}", Arrays.toString(args));
+        log.debug("{} arguments: {}", streamName, Arrays.toString(args));
         process = new ProcessBuilder(args).start();
-        loggingExecutor.schedule(new Logger(process.getInputStream()), LOG_WAIT_TIME, TimeUnit.MILLISECONDS);
-        loggingExecutor.schedule(new Logger(process.getErrorStream()), LOG_WAIT_TIME, TimeUnit.MILLISECONDS);
+        loggingExecutor.schedule(new Logger(streamName, process.getInputStream()), LOG_WAIT_TIME, TimeUnit.MILLISECONDS);
+        loggingExecutor.schedule(new Logger(streamName, process.getErrorStream()), LOG_WAIT_TIME, TimeUnit.MILLISECONDS);
     }
 
     @PreDestroy
     public void stop() throws InterruptedException {
         loggingExecutor.shutdownNow();
-        loggingExecutor.awaitTermination(10, TimeUnit.SECONDS);
+        boolean result = loggingExecutor.awaitTermination(10, TimeUnit.SECONDS);
+        if (!result) {
+            log.error("{} failed to stop log writers", streamName);
+        }
         if (process != null) {
             process.destroy();
         }
@@ -87,9 +95,11 @@ public class Ffmpeg {
 
     private static class Logger implements Runnable {
 
+        private final String streamName;
         private final BufferedReader reader;
 
-        public Logger(InputStream stream) {
+        public Logger(String streamName, InputStream stream) {
+            this.streamName = streamName;
             this.reader = new BufferedReader(new InputStreamReader(stream));
         }
 
@@ -98,10 +108,10 @@ public class Ffmpeg {
             try {
                 String line;
                 while ((line = reader.readLine()) != null) {
-                    log.info(line);
+                    log.info("{} {}", streamName, line);
                 }
             } catch (IOException e) {
-                log.error(e.getMessage(), e);
+                log.error(streamName + " " + e.getMessage(), e);
             }
         }
     }
