@@ -1,5 +1,6 @@
 package ru.mm.surv.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -18,9 +19,18 @@ public class SecurityConfig {
     @Order(1)
     public static class ApiWebSecurityConfig extends WebSecurityConfigurerAdapter{
 
+        private final Users users;
+        private final PasswordEncoder passwordEncoder;
+
+        @Autowired
+        public ApiWebSecurityConfig(Users users, PasswordEncoder passwordEncoder) {
+            this.users = users;
+            this.passwordEncoder = passwordEncoder;
+        }
+
         @Override
         protected void configure(final AuthenticationManagerBuilder auth) throws Exception {
-            configureUsers(auth);
+            configureUsers(auth, users, passwordEncoder);
         }
 
         @Override
@@ -32,7 +42,7 @@ public class SecurityConfig {
                     .csrf()
                     .disable()
                     .authorizeRequests()
-                    .antMatchers("/stream/webm/publish/**").hasRole("PUBLISHER");
+                    .antMatchers("/stream/webm/publish/**").hasRole(UserRole.PUBLISHER.toString());
         }
     }
 
@@ -40,9 +50,18 @@ public class SecurityConfig {
     @Order(2)
     public static class ApiTokenSecurityConfig extends WebSecurityConfigurerAdapter{
 
+        private final Users users;
+        private final PasswordEncoder passwordEncoder;
+
+        @Autowired
+        public ApiTokenSecurityConfig(Users users, PasswordEncoder passwordEncoder) {
+            this.users = users;
+            this.passwordEncoder = passwordEncoder;
+        }
+
         @Override
         protected void configure(final AuthenticationManagerBuilder auth) throws Exception {
-            configureUsers(auth);
+            configureUsers(auth, users, passwordEncoder);
         }
 
         @Override
@@ -51,24 +70,25 @@ public class SecurityConfig {
                     .csrf()
                     .disable()
                     .authorizeRequests()
-                    .antMatchers("/stream/webm/**").hasRole("CONSUMER")
-                    .antMatchers("/stream/hls/**").hasRole("CONSUMER")
-                    .antMatchers("/").hasRole("CONSUMER")
+                    .antMatchers("/stream/webm/**").hasRole(UserRole.CONSUMER.toString())
+                    .antMatchers("/stream/hls/**").hasRole(UserRole.CONSUMER.toString())
+                    .antMatchers("/").hasRole(UserRole.CONSUMER.toString())
                     .anyRequest().permitAll()
                     .and()
                     .formLogin().permitAll()
                     .and()
                     .logout().permitAll();
-            ;
         }
 
     }
 
-    private static void configureUsers(AuthenticationManagerBuilder auth) throws Exception {
-        auth.inMemoryAuthentication()
-                .withUser("publisher").password(passwordEncoder().encode("gdsfgertgdfgs")).roles("PUBLISHER")
-                .and()
-                .withUser("consumer").password(passwordEncoder().encode("jftjhgbvn")).roles("CONSUMER");
+    private static void configureUsers(AuthenticationManagerBuilder auth, Users users, PasswordEncoder passwordEncoder) throws Exception {
+        var inMemoryAuthentication = auth.inMemoryAuthentication();
+        users.getUsers().forEach((k, v) ->
+                inMemoryAuthentication
+                        .withUser(v.getUsername())
+                        .password(passwordEncoder.encode(v.getPassword()))
+                        .roles(v.getRole().toString()));
     }
 
     @Bean

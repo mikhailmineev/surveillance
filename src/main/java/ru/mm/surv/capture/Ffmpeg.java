@@ -2,12 +2,16 @@ package ru.mm.surv.capture;
 
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
+import ru.mm.surv.config.User;
 
 import javax.annotation.PreDestroy;
 import java.io.*;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.concurrent.*;
 
 @Slf4j
@@ -26,11 +30,13 @@ public class Ffmpeg {
     private Process process;
 
     @SneakyThrows
-    public Ffmpeg(String streamName, String captureConfig, Path folder) {
+    public Ffmpeg(String streamName, String captureConfig, Path folder, User user) {
         this.loggingExecutor = new ScheduledThreadPoolExecutor(2);
         this.streamName = streamName;
         this.captureConfig = captureConfig;
-        this.webmAuthorization = "Authorization: Basic cHVibGlzaGVyOmdkc2ZnZXJ0Z2RmZ3M=";
+        var basicCredentials = user.getUsername() + ":" + user.getPassword();
+        var basicCredentialBytes = basicCredentials.getBytes(Charset.defaultCharset());
+        this.webmAuthorization = HttpHeaders.AUTHORIZATION + ": Basic " + Base64.getEncoder().encodeToString(basicCredentialBytes);
         this.webmPublishUrl = "https://127.0.0.1:8443/stream/webm/publish/" + streamName;
         Path streamFolder = folder.resolve(streamName);
         Files.createDirectories(streamFolder);
