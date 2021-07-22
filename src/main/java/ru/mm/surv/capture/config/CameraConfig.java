@@ -6,4 +6,8 @@ import lombok.Data;
 public class CameraConfig {
 
     private String selector;
+
+    private String inputFramerate;
+
+    private String inputResolution;
 }

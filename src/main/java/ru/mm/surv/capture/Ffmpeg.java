@@ -3,6 +3,7 @@ package ru.mm.surv.capture;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
+import ru.mm.surv.capture.config.CameraConfig;
 import ru.mm.surv.config.User;
 
 import javax.annotation.PreDestroy;
@@ -25,13 +26,13 @@ public class Ffmpeg {
     private final String webmAuthorization;
     private final String webmPublishUrl;
     private final String hlsFile;
-    private final String captureConfig;
+    private final CameraConfig captureConfig;
 
     private Process process;
 
     @SneakyThrows
-    public Ffmpeg(String streamName, String captureConfig, Path folder, User user) {
-        this.loggingExecutor = new ScheduledThreadPoolExecutor(2);
+    public Ffmpeg(String streamName, CameraConfig captureConfig, Path folder, User user) {
+        this.loggingExecutor = new ScheduledThreadPoolExecutor(1);
         this.streamName = streamName;
         this.captureConfig = captureConfig;
         var basicCredentials = user.getUsername() + ":" + user.getPassword();
@@ -52,9 +53,9 @@ public class Ffmpeg {
         String[] args = new String[]{
                 FFMPEG_BINARY,
                 "-f", "dshow",
-                "-s", "320x240",
-                "-framerate", "16",
-                "-i", captureConfig,
+                "-s", "640x480",
+                "-framerate", "30",
+                "-i", captureConfig.getSelector(),
                 "-r", "16",
                 "-async", "1",
                 "-vsync", "1",
@@ -82,13 +83,13 @@ public class Ffmpeg {
                 hlsFile
         };
         log.debug("{} arguments: {}", streamName, Arrays.toString(args));
-        process = new ProcessBuilder(args).start();
+        process = new ProcessBuilder(args).redirectErrorStream(true).start();
         loggingExecutor.schedule(new Logger(streamName, process.getInputStream()), LOG_WAIT_TIME, TimeUnit.MILLISECONDS);
-        loggingExecutor.schedule(new Logger(streamName, process.getErrorStream()), LOG_WAIT_TIME, TimeUnit.MILLISECONDS);
     }
 
     @PreDestroy
-    public void stop() throws InterruptedException {
+    @SneakyThrows
+    public void stop() {
         loggingExecutor.shutdownNow();
         boolean result = loggingExecutor.awaitTermination(10, TimeUnit.SECONDS);
         if (!result) {

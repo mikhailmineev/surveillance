@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 import ru.mm.surv.capture.config.FfmpegConfig;
 import ru.mm.surv.config.Users;
 
+import javax.annotation.PreDestroy;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
@@ -23,11 +24,16 @@ public class FfmpegManager {
             FfmpegConfig config) {
         var publishUser = users.getUsers().get(publisher);
         config.getRecorder().forEach((k, v) -> {
-            recorders.put(k, new Ffmpeg(k, v.getSelector(), folder, publishUser));
+            recorders.put(k, new Ffmpeg(k, v, folder, publishUser));
         });
     }
 
     public void start() {
         recorders.forEach((s, ffmpeg) -> ffmpeg.start());
+    }
+
+    @PreDestroy
+    public void stop() {
+        recorders.forEach((s, ffmpeg) -> ffmpeg.stop());
     }
 }
