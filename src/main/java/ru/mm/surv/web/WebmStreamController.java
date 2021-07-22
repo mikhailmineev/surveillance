@@ -1,7 +1,6 @@
 package ru.mm.surv.web;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import ru.mm.surv.codecs.webm.incubator.streamm.ControlledStream;
 import ru.mm.surv.codecs.webm.incubator.streamm.StreamClient;
@@ -12,8 +11,8 @@ import ru.mm.surv.codecs.webm.util.stream.MeasuredOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @RestController
 @RequestMapping("stream/webm")
@@ -23,7 +22,7 @@ public class WebmStreamController {
     private final String STR_CONTENT_TYPE = "Content-type";
     private final String STR_X_SEQUENCE = "X-Sequence";
 
-    protected Map<String, ControlledStream> streams = new HashMap<>();
+    protected Map<String, ControlledStream> streams = new ConcurrentHashMap<>();
 
     @ExceptionHandler({ HttpException.class })
     public ResponseEntity<String> handleException(HttpException e) {
