@@ -16,6 +16,8 @@
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
+        <ffmpeg.buildTag>autobuild-2021-07-23-12-37</ffmpeg.buildTag>
+        <ffmpeg.version>ffmpeg-N-103050-g69aa2488fc-win64-gpl</ffmpeg.version>
     </properties>
     <dependencies>
         <dependency>
@@ -40,6 +42,11 @@
             <version>2.6</version>
         </dependency>
         <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.12.0</version>
+        </dependency>
+        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
@@ -59,6 +66,14 @@
 <!--        </path>-->
 <!--    </annotationProcessorPaths>-->
     <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+            </resource>
+            <resource>
+                <directory>${project.build.directory}/resources</directory>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
@@ -66,4 +81,59 @@
             </plugin>
         </plugins>
     </build>
+    <profiles>
+        <profile>
+            <id>download-ffmpeg</id>
+            <activation>
+                <file>
+                    <missing>target/resources/bin/ffmpeg.exe</missing>
+                </file>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>wagon-maven-plugin</artifactId>
+                        <version>2.0.2</version>
+                        <executions>
+                            <execution>
+                                <id>download-ffmpeg-win</id>
+                                <phase>generate-resources</phase>
+                                <goals>
+                                    <goal>download-single</goal>
+                                </goals>
+                                <configuration>
+                                    <url>https://github.com/</url>
+                                    <fromFile>BtbN/FFmpeg-Builds/releases/download/${ffmpeg.buildTag}/${ffmpeg.version}.zip</fromFile>
+                                    <toDir>${project.build.directory}/ffmpeg/win</toDir>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <version>3.0.0</version>
+                        <executions>
+                            <execution>
+                                <phase>generate-resources</phase>
+                                <configuration>
+                                    <target>
+                                        <echo message="unzipping file" />
+                                        <unzip src="${project.build.directory}/ffmpeg/win/${ffmpeg.version}.zip"
+                                               dest="${project.build.directory}/ffmpeg/win/" />
+                                        <copy overwrite="true"
+                                              file="${project.build.directory}/ffmpeg/win/${ffmpeg.version}/bin/ffmpeg.exe"
+                                              toFile="${project.build.directory}/resources/bin/ffmpeg.exe" />
+                                    </target>
+                                </configuration>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

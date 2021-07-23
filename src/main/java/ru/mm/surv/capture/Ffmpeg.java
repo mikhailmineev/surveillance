@@ -18,9 +18,9 @@ import java.util.concurrent.*;
 @Slf4j
 public class Ffmpeg {
 
-    public static final String FFMPEG_BINARY = "C:\\Users\\mikev\\Downloads\\ffmpeg-4.4-full_build\\bin\\ffmpeg.exe";
     public static final int LOG_WAIT_TIME = 100;
 
+    private final Path ffmpeg;
     private final ScheduledExecutorService loggingExecutor;
     private final String streamName;
     private final String webmAuthorization;
@@ -31,7 +31,8 @@ public class Ffmpeg {
     private Process process;
 
     @SneakyThrows
-    public Ffmpeg(String streamName, CameraConfig captureConfig, Path folder, User user) {
+    public Ffmpeg(Path ffmpeg, String streamName, CameraConfig captureConfig, Path folder, User user) {
+        this.ffmpeg = ffmpeg;
         this.loggingExecutor = new ScheduledThreadPoolExecutor(1);
         this.streamName = streamName;
         this.captureConfig = captureConfig;
@@ -51,7 +52,7 @@ public class Ffmpeg {
     @SneakyThrows
     public void start() {
         String[] args = new String[]{
-                FFMPEG_BINARY,
+                ffmpeg.toString(),
                 "-f", "dshow",
                 "-s", "640x480",
                 "-framerate", "30",
