@@ -21,6 +21,7 @@ public class Ffmpeg {
     public static final int LOG_WAIT_TIME = 100;
 
     private final Path ffmpeg;
+    private final String captureFunction;
     private final ScheduledExecutorService loggingExecutor;
     private final String streamName;
     private final String webmAuthorization;
@@ -31,8 +32,9 @@ public class Ffmpeg {
     private Process process;
 
     @SneakyThrows
-    public Ffmpeg(Path ffmpeg, String streamName, CameraConfig captureConfig, Path folder, User user) {
+    public Ffmpeg(Path ffmpeg, String captureFunction, String streamName, CameraConfig captureConfig, Path folder, User user) {
         this.ffmpeg = ffmpeg;
+        this.captureFunction = captureFunction;
         this.loggingExecutor = new ScheduledThreadPoolExecutor(1);
         this.streamName = streamName;
         this.captureConfig = captureConfig;
@@ -53,9 +55,9 @@ public class Ffmpeg {
     public void start() {
         String[] args = new String[]{
                 ffmpeg.toString(),
-                "-f", "dshow",
-                "-s", "640x480",
-                "-framerate", "30",
+                "-f", captureFunction,
+                "-s", captureConfig.getInputResolution(),
+                "-framerate", captureConfig.getInputFramerate(),
                 "-i", captureConfig.getSelector(),
                 "-r", "16",
                 "-async", "1",

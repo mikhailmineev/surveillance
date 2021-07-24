@@ -86,7 +86,7 @@
             <id>download-ffmpeg</id>
             <activation>
                 <file>
-                    <missing>target/resources/bin/ffmpeg.exe</missing>
+                    <missing>target/resources/bin/ffmpeg/win/ffmpeg.exe</missing>
                 </file>
             </activation>
             <build>
@@ -103,9 +103,21 @@
                                     <goal>download-single</goal>
                                 </goals>
                                 <configuration>
-                                    <url>https://github.com/</url>
+                                    <url>https://github.com</url>
                                     <fromFile>BtbN/FFmpeg-Builds/releases/download/${ffmpeg.buildTag}/${ffmpeg.version}.zip</fromFile>
-                                    <toDir>${project.build.directory}/ffmpeg/win</toDir>
+                                    <toFile>${project.build.directory}/ffmpeg/win/ffmpeg.zip</toFile>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>download-ffmpeg-mac</id>
+                                <phase>generate-resources</phase>
+                                <goals>
+                                    <goal>download-single</goal>
+                                </goals>
+                                <configuration>
+                                    <url>https://evermeet.cx</url>
+                                    <fromFile>ffmpeg/getrelease/zip</fromFile>
+                                    <toFile>${project.build.directory}/ffmpeg/mac/ffmpeg.zip</toFile>
                                 </configuration>
                             </execution>
                         </executions>
@@ -119,11 +131,16 @@
                                 <configuration>
                                     <target>
                                         <echo message="unzipping file" />
-                                        <unzip src="${project.build.directory}/ffmpeg/win/${ffmpeg.version}.zip"
+                                        <unzip src="${project.build.directory}/ffmpeg/win/ffmpeg.zip"
                                                dest="${project.build.directory}/ffmpeg/win/" />
                                         <copy overwrite="true"
                                               file="${project.build.directory}/ffmpeg/win/${ffmpeg.version}/bin/ffmpeg.exe"
-                                              toFile="${project.build.directory}/resources/bin/ffmpeg.exe" />
+                                              toFile="${project.build.directory}/resources/bin/ffmpeg/win/ffmpeg.exe" />
+                                        <unzip src="${project.build.directory}/ffmpeg/mac/ffmpeg.zip"
+                                               dest="${project.build.directory}/ffmpeg/mac/" />
+                                        <copy overwrite="true"
+                                              file="${project.build.directory}/ffmpeg/mac/ffmpeg"
+                                              toFile="${project.build.directory}/resources/bin/ffmpeg/mac/ffmpeg" />
                                     </target>
                                 </configuration>
                                 <goals>
