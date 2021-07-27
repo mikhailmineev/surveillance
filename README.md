@@ -1,7 +1,11 @@
 # Сервис стриминга веб камер
 ## Запуск
+### Через maven
 
-TBD
+```bash
+mvnw package
+run
+```
 
 ## Запуск из исходников
 
@@ -76,6 +80,7 @@ auth.users.user2.role=CONSUMER" >> application.properties
 Запустить проект
 
 ```properties
+mvn clean
 mvn spring-boot:run
 ```
 
