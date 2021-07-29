@@ -17,7 +17,7 @@ public class SecurityConfig {
 
     @Configuration
     @Order(1)
-    public static class ApiWebSecurityConfig extends WebSecurityConfigurerAdapter{
+    public static class ApiWebSecurityConfig extends WebSecurityConfigurerAdapter {
 
         private final Users users;
         private final PasswordEncoder passwordEncoder;
@@ -70,12 +70,13 @@ public class SecurityConfig {
                     .csrf()
                     .disable()
                     .authorizeRequests()
+                    .antMatchers("/actuator/**").hasRole(UserRole.ADMIN.toString())
                     .antMatchers("/stream/webm/**").hasRole(UserRole.CONSUMER.toString())
                     .antMatchers("/stream/hls/**").hasRole(UserRole.CONSUMER.toString())
                     .antMatchers("/").hasRole(UserRole.CONSUMER.toString())
                     .anyRequest().permitAll()
                     .and()
-                    .formLogin().permitAll()
+                    .formLogin().defaultSuccessUrl("/", true).permitAll()
                     .and()
                     .logout().permitAll();
         }
@@ -88,7 +89,7 @@ public class SecurityConfig {
                 inMemoryAuthentication
                         .withUser(v.getUsername())
                         .password(passwordEncoder.encode(v.getPassword()))
-                        .roles(v.getRole().toString()));
+                        .roles(v.getRoles().stream().map(UserRole::toString).toArray(String[]::new)));
     }
 
     @Bean
