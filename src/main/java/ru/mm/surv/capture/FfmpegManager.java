@@ -2,26 +2,22 @@ package ru.mm.surv.capture;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.SystemUtils;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.stereotype.Component;
-import ru.mm.surv.capture.config.FfmpegConfig;
+import ru.mm.surv.capture.repository.WebcamRepository;
 import ru.mm.surv.config.Users;
 
 import javax.annotation.PreDestroy;
 import java.io.*;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Consumer;
 
 @Component
 @Slf4j
@@ -30,6 +26,7 @@ public class FfmpegManager {
     public static final String FFMPEG_RESOURCES_PATH = "classpath:/bin/ffmpeg";
 
     private final Path executableFolder;
+    private final WebcamRepository webcamRepository;
     private final Map<String, Ffmpeg> recorders = new HashMap<>();
 
     @Autowired
@@ -38,24 +35,14 @@ public class FfmpegManager {
             @Value("${ffmpeg.hls.folder}") Path hlsStreamFolder,
             @Value("${ffmpeg.publisher}") String publisher,
             Users users,
-            FfmpegConfig config) {
+            WebcamRepository webcamRepository) {
         this.executableFolder = executableFolder;
+        this.webcamRepository = webcamRepository;
         Path ffmpeg = installExecutable();
         var publishUser = users.getUsers().get(publisher);
-        String captureFunction = getOsCaptureFunction();
-        config.getRecorder().forEach((k, v) -> {
-            recorders.put(k, new Ffmpeg(ffmpeg, captureFunction, k, v, hlsStreamFolder, publishUser));
+        this.webcamRepository.getAll().forEach((v) -> {
+            recorders.put(v.getName(), new Ffmpeg(ffmpeg, v, hlsStreamFolder, publishUser));
         });
-    }
-
-    private String getOsCaptureFunction() {
-        if (SystemUtils.IS_OS_WINDOWS) {
-            return "dshow";
-        } else if (SystemUtils.IS_OS_MAC) {
-            return "avfoundation";
-        } else {
-            throw new RuntimeException("Only Windows, MacOS supported");
-        }
     }
 
     private Path installExecutable() {

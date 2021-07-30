@@ -39,6 +39,7 @@ Is CN=Unknown, OU=Unknown, O=Unknown, L=Unknown, ST=Unknown, C=Unknown correct?
 Создать в корне проекта файл `application.properties`. Заполнить файл содержимым ниже, заменив `******` на пароли
 
 ```properties
+ffmpeg.recorder.first.name=first
 ffmpeg.recorder.first.selector=video=USB Video Device:audio=Microphone (USB Audio Device)
 ffmpeg.recorder.first.input_resolution=320x240
 ffmpeg.recorder.first.input_framerate=16

@@ -2,6 +2,7 @@ package ru.mm.surv.capture;
 
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.SystemUtils;
 import org.springframework.http.HttpHeaders;
 import ru.mm.surv.capture.config.CameraConfig;
 import ru.mm.surv.config.User;
@@ -32,11 +33,11 @@ public class Ffmpeg {
     private Process process;
 
     @SneakyThrows
-    public Ffmpeg(Path ffmpeg, String captureFunction, String streamName, CameraConfig captureConfig, Path folder, User user) {
+    public Ffmpeg(Path ffmpeg, CameraConfig captureConfig, Path folder, User user) {
         this.ffmpeg = ffmpeg;
-        this.captureFunction = captureFunction;
+        this.captureFunction = getOsCaptureFunction();
         this.loggingExecutor = new ScheduledThreadPoolExecutor(1);
-        this.streamName = streamName;
+        this.streamName = captureConfig.getName();
         this.captureConfig = captureConfig;
         var basicCredentials = user.getUsername() + ":" + user.getPassword();
         var basicCredentialBytes = basicCredentials.getBytes(Charset.defaultCharset());
@@ -49,6 +50,16 @@ public class Ffmpeg {
                 .map(Path::toFile)
                 .forEach(File::delete);
         this.hlsFile = streamFolder.resolve("stream.m3u8").toString();
+    }
+
+    private String getOsCaptureFunction() {
+        if (SystemUtils.IS_OS_WINDOWS) {
+            return "dshow";
+        } else if (SystemUtils.IS_OS_MAC) {
+            return "avfoundation";
+        } else {
+            throw new RuntimeException("Only Windows, MacOS supported");
+        }
     }
 
     @SneakyThrows

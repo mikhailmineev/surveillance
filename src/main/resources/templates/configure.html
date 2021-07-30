@@ -1,0 +1,27 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Surveillance</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta content='width=device-width, initial-scale=1' name='viewport'/>
+</head>
+<body>
+<h1>Surveillance config</h1>
+<h2>Active</h2>
+<table>
+    <tr>
+        <th>Name</th>
+        <th>Selector</th>
+        <th>Input framerate</th>
+        <th>Input resolution</th>
+        <th>Actions</th>
+    </tr>
+    <tr th:each="recorder : ${recorders}">
+        <td th:text="${recorder.name}">Name</td>
+        <td th:text="${recorder.selector}">selector</td>
+        <td th:text="${recorder.inputFramerate}">30</td>
+        <td th:text="${recorder.inputResolution}">320x240</td>
+        <td><button disabled>Update</button> <button disabled>Delete</button></td>
+    </tr>
+</table>
+</html>

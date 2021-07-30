@@ -5,6 +5,8 @@ import lombok.Data;
 @Data
 public class CameraConfig {
 
+    private String name;
+
     private String selector;
 
     private String inputFramerate;

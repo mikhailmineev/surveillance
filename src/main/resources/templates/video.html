@@ -1,5 +1,6 @@
 <!DOCTYPE HTML>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity5">
 <head>
     <title>Surveillance</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
@@ -7,8 +8,11 @@
 </head>
 <body>
 <h1>Surveillance</h1>
+<div sec:authorize="hasRole('ADMIN')">
+    <a href="/configure">Configure</a>
+</div>
 <div th:each="recorder : ${recorders}">
-    <h2>Camera <span th:text="${recorder}"> recorderName</span></h2>
+    <h2>Camera <span th:text="${recorder}">recorderName</span></h2>
     <video controls>
         <source th:src="@{/stream/webm/{recorder}/stream.webm(recorder=${recorder})}" type = "video/webm">
         <source th:src="@{/stream/hls/{recorder}/stream.m3u8(recorder=${recorder})}">
