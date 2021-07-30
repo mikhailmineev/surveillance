@@ -12,15 +12,17 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class HttpTraceActuatorConfiguration {
 
+    private static final int ORDER_BEFORE_SECURITY_FILTER = -102;
+
     @Bean
     public AuditEventRepository auditEventRepository() {
         return new InMemoryAuditEventRepository();
     }
 
     @Bean
-    HttpTraceFilter httpTraceFilter(HttpTraceRepository repository, HttpExchangeTracer tracer) {
-        var HttpTraceFilter = new HttpTraceFilter(repository, tracer);
-        HttpTraceFilter.setOrder(-102);
+    public HttpTraceFilter httpTraceFilter(HttpTraceRepository repository, HttpExchangeTracer tracer) {
+        var HttpTraceFilter = new HttpTraceFilterWithPrincipal(repository, tracer);
+        HttpTraceFilter.setOrder(ORDER_BEFORE_SECURITY_FILTER);
         return HttpTraceFilter;
     }
 
