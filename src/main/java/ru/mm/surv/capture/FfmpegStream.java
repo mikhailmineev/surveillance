@@ -17,7 +17,7 @@ import java.util.Base64;
 import java.util.concurrent.*;
 
 @Slf4j
-public class Ffmpeg {
+public class FfmpegStream {
 
     public static final int LOG_WAIT_TIME = 100;
 
@@ -33,7 +33,7 @@ public class Ffmpeg {
     private Process process;
 
     @SneakyThrows
-    public Ffmpeg(Path ffmpeg, CameraConfig captureConfig, Path folder, User user) {
+    public FfmpegStream(Path ffmpeg, CameraConfig captureConfig, Path folder, User user) {
         this.ffmpeg = ffmpeg;
         this.captureFunction = getOsCaptureFunction();
         this.loggingExecutor = new ScheduledThreadPoolExecutor(1);

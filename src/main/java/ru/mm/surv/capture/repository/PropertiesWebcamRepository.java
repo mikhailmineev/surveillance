@@ -5,6 +5,9 @@ import ru.mm.surv.capture.config.CameraConfig;
 import ru.mm.surv.capture.config.FfmpegConfig;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Optional;
 
 @Repository
 public class PropertiesWebcamRepository implements WebcamRepository {
@@ -16,6 +19,10 @@ public class PropertiesWebcamRepository implements WebcamRepository {
 
     @Override
     public Collection<CameraConfig> getAll() {
-        return config.getRecorder().values();
+        return Optional
+                .ofNullable(config)
+                .map(FfmpegConfig::getRecorder)
+                .map(Map::values)
+                .orElse(Collections.emptyList());
     }
 }

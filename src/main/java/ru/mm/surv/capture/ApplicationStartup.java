@@ -8,9 +8,9 @@ import org.springframework.stereotype.Component;
 public class ApplicationStartup
         implements ApplicationListener<ApplicationReadyEvent> {
 
-    private final FfmpegManager ffmpeg;
+    private final FfmpegStreamManager ffmpeg;
 
-    public ApplicationStartup(FfmpegManager ffmpeg) {
+    public ApplicationStartup(FfmpegStreamManager ffmpeg) {
         this.ffmpeg = ffmpeg;
     }
 

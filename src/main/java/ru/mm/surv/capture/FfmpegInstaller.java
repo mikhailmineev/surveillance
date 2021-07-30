@@ -7,42 +7,34 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.stereotype.Component;
-import ru.mm.surv.capture.repository.WebcamRepository;
-import ru.mm.surv.config.Users;
 
-import javax.annotation.PreDestroy;
-import java.io.*;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermission;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
 
 @Component
 @Slf4j
-public class FfmpegManager {
+public class FfmpegInstaller {
 
     public static final String FFMPEG_RESOURCES_PATH = "classpath:/bin/ffmpeg";
 
     private final Path executableFolder;
-    private final WebcamRepository webcamRepository;
-    private final Map<String, Ffmpeg> recorders = new HashMap<>();
+
+    private final Path ffmpeg;
 
     @Autowired
-    public FfmpegManager(
-            @Value("${ffmpeg.folder}") Path executableFolder,
-            @Value("${ffmpeg.hls.folder}") Path hlsStreamFolder,
-            @Value("${ffmpeg.publisher}") String publisher,
-            Users users,
-            WebcamRepository webcamRepository) {
+    public FfmpegInstaller(@Value("${ffmpeg.folder}") Path executableFolder) {
         this.executableFolder = executableFolder;
-        this.webcamRepository = webcamRepository;
-        Path ffmpeg = installExecutable();
-        var publishUser = users.getUsers().get(publisher);
-        this.webcamRepository.getAll().forEach((v) -> {
-            recorders.put(v.getName(), new Ffmpeg(ffmpeg, v, hlsStreamFolder, publishUser));
-        });
+        this.ffmpeg = installExecutable();
+    }
+
+    public Path getPath() {
+        return ffmpeg;
     }
 
     private Path installExecutable() {
@@ -93,14 +85,5 @@ public class FfmpegManager {
         }
 
         return target;
-    }
-
-    public void start() {
-        recorders.forEach((s, ffmpeg) -> ffmpeg.start());
-    }
-
-    @PreDestroy
-    public void stop() {
-        recorders.forEach((s, ffmpeg) -> ffmpeg.stop());
     }
 }
