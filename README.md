@@ -50,10 +50,10 @@ server.ssl.key-alias=selfsigned
 
 auth.users.user1.username=publisher
 auth.users.user1.password=*******
-auth.users.user1.role=PUBLISHER
+auth.users.user1.roles=PUBLISHER
 auth.users.user2.username=consumer
 auth.users.user2.password=******
-auth.users.user2.role=CONSUMER
+auth.users.user2.roles=CONSUMER,ADMIN
 ```
 
 Команда для создания файла
