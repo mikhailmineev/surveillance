@@ -7,7 +7,14 @@ mvnw package
 run
 ```
 
-## Запуск из исходников
+или
+
+```bash
+mvn clean
+mvn spring-boot:run
+```
+
+## Первый запуск
 
 Создать контейнер с серверным сертификатом
 
@@ -39,12 +46,6 @@ Is CN=Unknown, OU=Unknown, O=Unknown, L=Unknown, ST=Unknown, C=Unknown correct?
 Создать в корне проекта файл `application.properties`. Заполнить файл содержимым ниже, заменив `******` на пароли
 
 ```properties
-ffmpeg.recorder.first.name=first
-ffmpeg.recorder.first.selector=video=USB Video Device:audio=Microphone (USB Audio Device)
-ffmpeg.recorder.first.input_resolution=320x240
-ffmpeg.recorder.first.input_framerate=16
-ffmpeg.publisher=user1
-
 server.ssl.key-store=keystore.jks
 server.ssl.key-store-password=******
 server.ssl.key-alias=selfsigned
@@ -60,11 +61,6 @@ auth.users.user2.roles=CONSUMER,ADMIN
 Команда для создания файла
 
 ```bash
-echo "ffmpeg.recorder.first.selector=video=USB Video Device:audio=Microphone (USB Audio Device)
-ffmpeg.recorder.first.input_resolution=320x240
-ffmpeg.recorder.first.input_framerate=16
-ffmpeg.publisher=user1
-
 server.ssl.key-store=keystore.jks
 server.ssl.key-store-password=******
 server.ssl.key-alias=selfsigned
@@ -80,9 +76,23 @@ auth.users.user2.role=CONSUMER" >> application.properties
 
 Запустить проект
 
+Сервис будет доступен по https://localhost:8443
+
+Зайти через администратора на сайт
+
+Зайти в панель "configure"
+
+В таблице доступных устройств взять названия нужных
+
+Добавить в `application.properties` конфигурацию захвата. Ниже пример для одной из камер
+
 ```properties
-mvn clean
-mvn spring-boot:run
+ffmpeg.recorder.first.name=first
+ffmpeg.recorder.first.audio=Microphone (USB Audio Device)
+ffmpeg.recorder.first.video=USB Video Device
+ffmpeg.recorder.first.input_resolution=320x240
+ffmpeg.recorder.first.input_framerate=16
+ffmpeg.publisher=user1
 ```
 
-Сервис будет доступен по https://localhost:8443
+Перезапустить приложение

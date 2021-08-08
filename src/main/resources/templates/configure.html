@@ -11,17 +11,32 @@
 <table>
     <tr>
         <th>Name</th>
-        <th>Selector</th>
+        <th>Video</th>
         <th>Input framerate</th>
         <th>Input resolution</th>
+        <th>Audio</th>
         <th>Actions</th>
     </tr>
     <tr th:each="recorder : ${recorders}">
         <td th:text="${recorder.name}">Name</td>
-        <td th:text="${recorder.selector}">selector</td>
+        <td th:text="${recorder.video}">Video</td>
         <td th:text="${recorder.inputFramerate}">30</td>
         <td th:text="${recorder.inputResolution}">320x240</td>
+        <td th:text="${recorder.audio}">Audio</td>
         <td><button disabled>Update</button> <button disabled>Delete</button></td>
+    </tr>
+</table>
+<h2>Supported captures</h2>
+<table>
+    <tr>
+        <th>Id</th>
+        <th>Type</th>
+        <th>Name</th>
+    </tr>
+    <tr th:each="inputSource : ${inputSources}">
+        <td th:text="${inputSource.id}">Id</td>
+        <td th:text="${inputSource.type}">Type</td>
+        <td th:text="${inputSource.name}">Name</td>
     </tr>
 </table>
 </body>

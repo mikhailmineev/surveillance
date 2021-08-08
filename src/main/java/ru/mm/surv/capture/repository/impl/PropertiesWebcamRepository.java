@@ -1,8 +1,9 @@
-package ru.mm.surv.capture.repository;
+package ru.mm.surv.capture.repository.impl;
 
 import org.springframework.stereotype.Repository;
 import ru.mm.surv.capture.config.CameraConfig;
 import ru.mm.surv.capture.config.FfmpegConfig;
+import ru.mm.surv.capture.repository.WebcamRepository;
 
 import java.util.Collection;
 import java.util.Collections;

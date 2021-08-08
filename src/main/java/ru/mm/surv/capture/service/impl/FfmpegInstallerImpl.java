@@ -1,12 +1,13 @@
-package ru.mm.surv.capture;
+package ru.mm.surv.capture.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.SystemUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
+import ru.mm.surv.capture.config.Platform;
+import ru.mm.surv.capture.service.FfmpegInstaller;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -14,12 +15,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.attribute.PosixFilePermission;
-import java.util.Set;
 
-@Component
+@Service
 @Slf4j
-public class FfmpegInstaller {
+public class FfmpegInstallerImpl implements FfmpegInstaller {
 
     public static final String FFMPEG_RESOURCES_PATH = "classpath:/bin/ffmpeg";
 
@@ -28,37 +27,23 @@ public class FfmpegInstaller {
     private final Path ffmpeg;
 
     @Autowired
-    public FfmpegInstaller(@Value("${ffmpeg.folder}") Path executableFolder) {
+    public FfmpegInstallerImpl(@Value("${ffmpeg.folder}") Path executableFolder) {
         this.executableFolder = executableFolder;
         this.ffmpeg = installExecutable();
     }
 
+    @Override
     public Path getPath() {
         return ffmpeg;
     }
 
     private Path installExecutable() {
-        ConsumerIO<Path> postActions;
-        String os;
-
-        if (SystemUtils.IS_OS_WINDOWS) {
-            os = "win";
-            postActions = (path) -> {};
-        } else if (SystemUtils.IS_OS_MAC) {
-            os = "mac";
-            postActions = (path) -> {
-                Set<PosixFilePermission> perms = Files.getPosixFilePermissions(path);
-                perms.add(PosixFilePermission.OWNER_EXECUTE);
-                Files.setPosixFilePermissions(path, perms);
-            };
-        } else {
-            throw new RuntimeException("Only Windows, MacOS supported");
-        }
+        Platform platform = Platform.getCurrent();
 
         Resource ffmpegResource;
         try {
             log.info("Ffmpeg not installed, installing new");
-            Resource[] resources = new PathMatchingResourcePatternResolver().getResources( FFMPEG_RESOURCES_PATH + "/" + os + "/*");
+            Resource[] resources = new PathMatchingResourcePatternResolver().getResources( FFMPEG_RESOURCES_PATH + "/" + platform.getName() + "/*");
             if (resources.length != 1) {
                 throw new RuntimeException("Failed to locate ffmpeg in distribution path");
             }
@@ -79,7 +64,7 @@ public class FfmpegInstaller {
                 OutputStream outputStream = new FileOutputStream(target.toFile())) {
                 inputStream.transferTo(outputStream);
             }
-            postActions.accept(target);
+            platform.getFfmpegPostInstall().accept(target);
         } catch (IOException e) {
             throw new RuntimeException("Failed to install ffmpeg", e);
         }

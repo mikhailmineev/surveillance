@@ -2,9 +2,9 @@ package ru.mm.surv.capture;
 
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.SystemUtils;
 import org.springframework.http.HttpHeaders;
 import ru.mm.surv.capture.config.CameraConfig;
+import ru.mm.surv.capture.config.Platform;
 import ru.mm.surv.config.User;
 
 import javax.annotation.PreDestroy;
@@ -21,8 +21,8 @@ public class FfmpegStream {
 
     public static final int LOG_WAIT_TIME = 100;
 
+    private final Platform platform;
     private final Path ffmpeg;
-    private final String captureFunction;
     private final ScheduledExecutorService loggingExecutor;
     private final String streamName;
     private final String webmAuthorization;
@@ -33,9 +33,9 @@ public class FfmpegStream {
     private Process process;
 
     @SneakyThrows
-    public FfmpegStream(Path ffmpeg, CameraConfig captureConfig, Path folder, User user) {
+    public FfmpegStream(Platform platform, Path ffmpeg, CameraConfig captureConfig, Path folder, User user) {
+        this.platform = platform;
         this.ffmpeg = ffmpeg;
-        this.captureFunction = getOsCaptureFunction();
         this.loggingExecutor = new ScheduledThreadPoolExecutor(1);
         this.streamName = captureConfig.getName();
         this.captureConfig = captureConfig;
@@ -52,24 +52,14 @@ public class FfmpegStream {
         this.hlsFile = streamFolder.resolve("stream.m3u8").toString();
     }
 
-    private String getOsCaptureFunction() {
-        if (SystemUtils.IS_OS_WINDOWS) {
-            return "dshow";
-        } else if (SystemUtils.IS_OS_MAC) {
-            return "avfoundation";
-        } else {
-            throw new RuntimeException("Only Windows, MacOS supported");
-        }
-    }
-
     @SneakyThrows
     public void start() {
         String[] args = new String[]{
                 ffmpeg.toString(),
-                "-f", captureFunction,
+                "-f", platform.getOsCaptureFunction(),
                 "-s", captureConfig.getInputResolution(),
                 "-framerate", captureConfig.getInputFramerate(),
-                "-i", captureConfig.getSelector(),
+                "-i", platform.getSelector(captureConfig),
                 "-r", "16",
                 "-async", "1",
                 "-vsync", "1",

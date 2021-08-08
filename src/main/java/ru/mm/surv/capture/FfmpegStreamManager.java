@@ -4,7 +4,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import ru.mm.surv.capture.config.Platform;
 import ru.mm.surv.capture.repository.WebcamRepository;
+import ru.mm.surv.capture.service.FfmpegInstaller;
 import ru.mm.surv.config.Users;
 
 import javax.annotation.PreDestroy;
@@ -28,7 +30,7 @@ public class FfmpegStreamManager {
         var ffmpeg = ffmpegInstaller.getPath();
         var publishUser = users.getUsers().get(publisher);
         webcamRepository.getAll().forEach((v) -> {
-            recorders.put(v.getName(), new FfmpegStream(ffmpeg, v, hlsStreamFolder, publishUser));
+            recorders.put(v.getName(), new FfmpegStream(Platform.getCurrent(), ffmpeg, v, hlsStreamFolder, publishUser));
         });
     }
 

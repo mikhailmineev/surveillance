@@ -7,7 +7,9 @@ public class CameraConfig {
 
     private String name;
 
-    private String selector;
+    private String video;
+
+    private String audio;
 
     private String inputFramerate;
 
