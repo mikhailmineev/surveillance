@@ -11,6 +11,9 @@
 <div sec:authorize="hasRole('ADMIN')">
     <a href="/configure">Configure</a>
 </div>
+<div>
+    <a href="/logout">Logout</a>
+</div>
 <div th:each="recorder : ${recorders}">
     <h2>Camera <span th:text="${recorder}">recorderName</span></h2>
     <video controls>
