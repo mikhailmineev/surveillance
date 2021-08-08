@@ -16,8 +16,8 @@
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
-        <ffmpeg.buildTag>autobuild-2021-07-23-12-37</ffmpeg.buildTag>
-        <ffmpeg.version>ffmpeg-N-103050-g69aa2488fc-win64-gpl</ffmpeg.version>
+        <ffmpeg.buildTag>autobuild-2021-08-08-12-36</ffmpeg.buildTag>
+        <ffmpeg.version>ffmpeg-N-103179-gac0408522a-win64-gpl</ffmpeg.version>
     </properties>
     <dependencies>
         <dependency>
