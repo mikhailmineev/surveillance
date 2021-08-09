@@ -11,6 +11,10 @@
     <a href="/">Back to streams</a>
 </div>
 <div>
+    <a th:unless="${streamActive}" href="/stream/control/start">Start stream</a>
+    <a th:if="${streamActive}" href="/stream/control/stop">Stop stream</a>
+</div>
+<div>
     <a href="/logout">Logout</a>
 </div>
 <h2>Active</h2>

@@ -72,6 +72,7 @@ public class SecurityConfig {
                     .authorizeRequests()
                     .antMatchers("/actuator/**").hasRole(UserRole.ADMIN.toString())
                     .antMatchers("/configure/**").hasRole(UserRole.ADMIN.toString())
+                    .antMatchers("/stream/control/**").hasRole(UserRole.ADMIN.toString())
                     .antMatchers("/stream/webm/**").hasRole(UserRole.CONSUMER.toString())
                     .antMatchers("/stream/hls/**").hasRole(UserRole.CONSUMER.toString())
                     .anyRequest().authenticated()

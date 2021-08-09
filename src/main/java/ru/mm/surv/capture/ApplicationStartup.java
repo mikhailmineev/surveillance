@@ -3,14 +3,15 @@ package ru.mm.surv.capture;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
+import ru.mm.surv.capture.service.FfmpegStream;
 
 @Component
 public class ApplicationStartup
         implements ApplicationListener<ApplicationReadyEvent> {
 
-    private final FfmpegStreamManager ffmpeg;
+    private final FfmpegStream ffmpeg;
 
-    public ApplicationStartup(FfmpegStreamManager ffmpeg) {
+    public ApplicationStartup(FfmpegStream ffmpeg) {
         this.ffmpeg = ffmpeg;
     }
 

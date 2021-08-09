@@ -1,23 +1,25 @@
-package ru.mm.surv.capture;
+package ru.mm.surv.capture.service.impl;
 
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import ru.mm.surv.capture.config.CameraConfig;
 import ru.mm.surv.capture.config.Platform;
+import ru.mm.surv.capture.service.FfmpegInstaller;
 import ru.mm.surv.config.User;
 
-import javax.annotation.PreDestroy;
 import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.concurrent.*;
 
 @Slf4j
-public class FfmpegStream {
+public class FfmpegSingleStream {
 
     public static final int LOG_WAIT_TIME = 100;
 
@@ -28,14 +30,15 @@ public class FfmpegStream {
     private final String webmAuthorization;
     private final String webmPublishUrl;
     private final String hlsFile;
+    private final String mp4File;
     private final CameraConfig captureConfig;
 
     private Process process;
 
     @SneakyThrows
-    public FfmpegStream(Platform platform, Path ffmpeg, CameraConfig captureConfig, Path folder, User user) {
+    public FfmpegSingleStream(Platform platform, FfmpegInstaller ffmpegInstaller, CameraConfig captureConfig, Path hlsStreamsFolder, Path mp4RecordsFolder, User user) {
         this.platform = platform;
-        this.ffmpeg = ffmpeg;
+        this.ffmpeg = ffmpegInstaller.getPath();
         this.loggingExecutor = new ScheduledThreadPoolExecutor(1);
         this.streamName = captureConfig.getName();
         this.captureConfig = captureConfig;
@@ -43,13 +46,19 @@ public class FfmpegStream {
         var basicCredentialBytes = basicCredentials.getBytes(Charset.defaultCharset());
         this.webmAuthorization = HttpHeaders.AUTHORIZATION + ": Basic " + Base64.getEncoder().encodeToString(basicCredentialBytes);
         this.webmPublishUrl = "https://127.0.0.1:8443/stream/webm/publish/" + streamName;
-        Path streamFolder = folder.resolve(streamName);
+
+        Path streamFolder = hlsStreamsFolder.resolve(streamName);
         Files.createDirectories(streamFolder);
         Files.walk(streamFolder)
                 .filter(Files::isRegularFile)
                 .map(Path::toFile)
                 .forEach(File::delete);
         this.hlsFile = streamFolder.resolve("stream.m3u8").toString();
+
+        Files.createDirectories(mp4RecordsFolder);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss");
+        String mp4FileName = streamName + "-" + LocalDateTime.now().format(formatter) + ".mp4";
+        this.mp4File = mp4RecordsFolder.resolve(mp4FileName).toString();
     }
 
     @SneakyThrows
@@ -85,23 +94,32 @@ public class FfmpegStream {
                 "-hls_time", "1",
                 "-hls_list_size", "10",
                 "-hls_flags", "delete_segments",
-                hlsFile
+                hlsFile,
+                "-codec:a", "libvorbis",
+                "-b:a", "128k",
+                "-codec:v", "libx264",
+                "-pix_fmt", "yuv420p",
+                "-b:v", "750k",
+                "-minrate", "400k",
+                "-maxrate", "1000k",
+                "-bufsize", "1500k",
+                "-vf", "scale=-1:360",
+                mp4File
         };
         log.debug("{} arguments: {}", streamName, Arrays.toString(args));
         process = new ProcessBuilder(args).redirectErrorStream(true).start();
         loggingExecutor.schedule(new Logger(streamName, process.getInputStream()), LOG_WAIT_TIME, TimeUnit.MILLISECONDS);
     }
 
-    @PreDestroy
     @SneakyThrows
     public void stop() {
+        if (process != null) {
+            process.destroy();
+        }
         loggingExecutor.shutdownNow();
         boolean result = loggingExecutor.awaitTermination(10, TimeUnit.SECONDS);
         if (!result) {
             log.error("{} failed to stop log writers", streamName);
-        }
-        if (process != null) {
-            process.destroy();
         }
     }
 

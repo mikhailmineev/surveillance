@@ -8,31 +8,30 @@ import ru.mm.surv.capture.WebcamDiscovery;
 import ru.mm.surv.capture.config.CameraConfig;
 import ru.mm.surv.capture.config.InputSource;
 import ru.mm.surv.capture.repository.WebcamRepository;
+import ru.mm.surv.capture.service.FfmpegStream;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Controller
 public class Web {
 
+    private final FfmpegStream ffmpegStream;
     private final WebcamRepository webcamRepository;
     private final WebcamDiscovery webcamDiscovery;
 
     @Autowired
-    public Web(WebcamRepository webcamRepository, WebcamDiscovery webcamDiscovery) {
+    public Web(FfmpegStream ffmpegStream, WebcamRepository webcamRepository, WebcamDiscovery webcamDiscovery) {
+        this.ffmpegStream = ffmpegStream;
         this.webcamRepository = webcamRepository;
         this.webcamDiscovery = webcamDiscovery;
     }
 
     @GetMapping
     public String mainPage(Model model) {
-        Set<String> recorders = webcamRepository.getAll()
-                .stream()
-                .map(CameraConfig::getName)
-                .collect(Collectors.toSet());
+        Collection<String> recorders = ffmpegStream.getStreamNames();
         model.addAttribute("recorders", recorders);
+        model.addAttribute("streamActive", ffmpegStream.isActive());
         return "video.html";
     }
 
@@ -42,6 +41,7 @@ public class Web {
         List<InputSource> inputSources = webcamDiscovery.getInputSources();
         model.addAttribute("recorders", recorders);
         model.addAttribute("inputSources", inputSources);
+        model.addAttribute("streamActive", ffmpegStream.isActive());
         return "configure.html";
     }
 }

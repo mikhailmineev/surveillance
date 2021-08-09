@@ -1,6 +1,5 @@
 package ru.mm.surv.web;
 
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.mm.surv.codecs.webm.incubator.streamm.ControlledStream;
 import ru.mm.surv.codecs.webm.incubator.streamm.StreamClient;
@@ -23,11 +22,6 @@ public class WebmStreamController {
     private final String STR_X_SEQUENCE = "X-Sequence";
 
     protected Map<String, ControlledStream> streams = new ConcurrentHashMap<>();
-
-    @ExceptionHandler({ HttpException.class })
-    public ResponseEntity<String> handleException(HttpException e) {
-        return ResponseEntity.status(e.getCode()).body(e.getMessage());
-    }
 
     @PostMapping("publish/{streamId}")
     @ResponseBody
