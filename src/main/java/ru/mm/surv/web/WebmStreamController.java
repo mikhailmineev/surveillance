@@ -58,7 +58,7 @@ public class WebmStreamController {
         stream.stop();
     }
 
-    @GetMapping("{streamId}/stream.webm")
+    @GetMapping(value = "{streamId}/stream.webm", produces = MIME_TYPE_WEBM)
     public void consume(@PathVariable String streamId, HttpServletResponse response,
                         @RequestParam(name = "sendHeader", defaultValue = "true") String sendHeaderParam,
                         @RequestParam(name = "fragmentSequence", defaultValue = "-1") String fragmentSequenceParam,

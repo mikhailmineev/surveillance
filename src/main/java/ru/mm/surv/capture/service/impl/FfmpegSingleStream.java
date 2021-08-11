@@ -113,8 +113,18 @@ public class FfmpegSingleStream {
 
     @SneakyThrows
     public void stop() {
+        log.info("Stopping stream {}", streamName);
         if (process != null) {
-            process.destroy();
+            try (PrintStream printStream = new PrintStream(process.getOutputStream())) {
+                printStream.print("q");
+            }
+            if (!process.waitFor(10, TimeUnit.SECONDS)) {
+                log.error("Waiting too long for stream " + streamName + " to stop");
+            }
+            int errorCode = process.exitValue();
+            if (errorCode != 0) {
+                log.error("Stream stopped with error code " + errorCode);
+            }
         }
         loggingExecutor.shutdownNow();
         boolean result = loggingExecutor.awaitTermination(10, TimeUnit.SECONDS);

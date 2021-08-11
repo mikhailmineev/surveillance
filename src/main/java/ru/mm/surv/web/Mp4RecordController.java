@@ -1,36 +1,37 @@
 package ru.mm.surv.web;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import ru.mm.surv.codecs.webm.incubator.streamm.ControlledStream;
 
-import java.io.BufferedInputStream;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.file.Path;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @RestController
-@RequestMapping("stream/hls")
-public class HlsStreamController {
+@RequestMapping("record/mp4")
+@Slf4j
+public class Mp4RecordController {
 
-    private final Path hlsFolder;
+    private final Path recordsFolder;
 
-    public HlsStreamController(@Value("${ffmpeg.hls.folder}") Path hlsFolder) {
-        this.hlsFolder = hlsFolder;
+    public Mp4RecordController(@Value("${ffmpeg.mp4.folder}") Path recordsFolder) {
+        this.recordsFolder = recordsFolder;
     }
-
-    @GetMapping(value = "/{streamId}/{fileName}", produces = "application/vnd.apple.mpegurl")
+    @GetMapping(path = "/{fileName}", produces = "video/mp4")
     public ResponseEntity<InputStreamResource> getFile(
-            @PathVariable("streamId") String streamId,
             @PathVariable("fileName") String fileName) throws HttpException {
         try {
-            Path hlsFilePath = hlsFolder.resolve(streamId).resolve(fileName);
+            Path hlsFilePath = recordsFolder.resolve(fileName);
             InputStream is = new BufferedInputStream(new FileInputStream(hlsFilePath.toFile()));
             return ResponseEntity.ok(new InputStreamResource(is));
         } catch (FileNotFoundException e) {
-            throw new HttpException(404, "Stream Not Running");
+            throw new HttpException(404, "File not found");
         }
     }
 }

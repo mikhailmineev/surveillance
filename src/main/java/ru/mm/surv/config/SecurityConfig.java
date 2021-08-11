@@ -75,6 +75,7 @@ public class SecurityConfig {
                     .antMatchers("/stream/control/**").hasRole(UserRole.ADMIN.toString())
                     .antMatchers("/stream/webm/**").hasRole(UserRole.CONSUMER.toString())
                     .antMatchers("/stream/hls/**").hasRole(UserRole.CONSUMER.toString())
+                    .antMatchers("/record/**").hasRole(UserRole.CONSUMER.toString())
                     .anyRequest().authenticated()
                     .and()
                     .formLogin().defaultSuccessUrl("/", true).permitAll()

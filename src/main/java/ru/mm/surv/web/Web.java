@@ -9,7 +9,9 @@ import ru.mm.surv.capture.config.CameraConfig;
 import ru.mm.surv.capture.config.InputSource;
 import ru.mm.surv.capture.repository.WebcamRepository;
 import ru.mm.surv.capture.service.FfmpegStream;
+import ru.mm.surv.capture.service.RecordService;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 
@@ -19,18 +21,22 @@ public class Web {
     private final FfmpegStream ffmpegStream;
     private final WebcamRepository webcamRepository;
     private final WebcamDiscovery webcamDiscovery;
+    private final RecordService recordService;
 
     @Autowired
-    public Web(FfmpegStream ffmpegStream, WebcamRepository webcamRepository, WebcamDiscovery webcamDiscovery) {
+    public Web(FfmpegStream ffmpegStream, WebcamRepository webcamRepository, WebcamDiscovery webcamDiscovery, RecordService recordService) {
         this.ffmpegStream = ffmpegStream;
         this.webcamRepository = webcamRepository;
         this.webcamDiscovery = webcamDiscovery;
+        this.recordService = recordService;
     }
 
     @GetMapping
-    public String mainPage(Model model) {
-        Collection<String> recorders = ffmpegStream.getStreamNames();
-        model.addAttribute("recorders", recorders);
+    public String mainPage(Model model) throws IOException {
+        Collection<String> streams = ffmpegStream.getStreamNames();
+        model.addAttribute("streams", streams);
+        Collection<String> records = recordService.getRecords();
+        model.addAttribute("records", records);
         model.addAttribute("streamActive", ffmpegStream.isActive());
         return "video.html";
     }
