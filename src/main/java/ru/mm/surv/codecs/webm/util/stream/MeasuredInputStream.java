@@ -24,10 +24,6 @@ import java.io.InputStream;
 import java.net.SocketTimeoutException;
 import java.util.Date;
 
-/**
- *
- * @author Varga Bence
- */
 public class MeasuredInputStream extends InputStream {
     
     protected final InputStream base;

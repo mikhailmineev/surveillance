@@ -1,5 +1,6 @@
 package ru.mm.surv.web;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.mm.surv.codecs.webm.incubator.streamm.ControlledStream;
 import ru.mm.surv.codecs.webm.incubator.streamm.StreamClient;
@@ -15,6 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @RestController
 @RequestMapping("stream/webm")
+@Slf4j
 public class WebmStreamController {
 
     private final String MIME_TYPE_WEBM = "video/webm; codecs=\"vp8,vorbis\"";
@@ -44,7 +46,11 @@ public class WebmStreamController {
          * Start publishing
          */
         // this thread is working (will be blocked) while the stream is being published
-        streamInput.run();
+        try {
+            streamInput.run();
+        } catch (IOException e) {
+            log.warn("Stream stopped: {}", e.getMessage());
+        }
         /*
          * End of publishing
          */

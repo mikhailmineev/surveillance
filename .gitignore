@@ -6,4 +6,5 @@
 *.iml
 
 # Build files
-target
+.gradle
+build

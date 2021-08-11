@@ -18,6 +18,7 @@
 package ru.mm.surv.codecs.webm.util.stream;
 
 
+import java.io.IOException;
 import java.io.InputStream;
 
 /**
@@ -44,7 +45,7 @@ public class Feeder {
     /**
      * Feeds the input to a <code>Processor</code> until it finishes its work.
      */
-    public void feedTo(Processor processor) {
+    public void feedTo(Processor processor) throws IOException {
         byte[] data = buffer.getData();
         
         do {
@@ -63,19 +64,15 @@ public class Feeder {
             buffer.compact();
             
             // reading new data and notifying buffer about the new content
-            try {
-                int length = buffer.getLength();
-                int bytes = input.read(data, length, data.length - length);
-                
-                // no more data to read
-                if (bytes == -1)
-                    return;
-                
-                buffer.markAppended(bytes);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-            
+            int length = buffer.getLength();
+            int bytes = input.read(data, length, data.length - length);
+
+            // no more data to read
+            if (bytes == -1)
+                return;
+
+            buffer.markAppended(bytes);
+
         } while (true);
     }
 }

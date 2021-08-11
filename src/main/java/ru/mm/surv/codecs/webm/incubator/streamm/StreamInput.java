@@ -20,6 +20,7 @@ package ru.mm.surv.codecs.webm.incubator.streamm;
 import ru.mm.surv.codecs.webm.util.stream.Buffer;
 import ru.mm.surv.codecs.webm.util.stream.Feeder;
 
+import java.io.IOException;
 import java.io.InputStream;
 
 public class StreamInput {
@@ -34,7 +35,7 @@ public class StreamInput {
         this.input = input;
     }
     
-    public void run() {
+    public void run() throws IOException {
         
         // notification about starting the input process
         stream.postEvent(new ServerEvent(this, stream, ServerEvent.INPUT_START));

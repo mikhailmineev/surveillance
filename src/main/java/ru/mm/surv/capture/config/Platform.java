@@ -19,18 +19,18 @@ public enum Platform {
             "{0}:{1}",
             "avfoundation",
             "AVFoundation",
-            (path) -> {},
+            (path) -> {
+                Set<PosixFilePermission> perms = Files.getPosixFilePermissions(path);
+                perms.add(PosixFilePermission.OWNER_EXECUTE);
+                Files.setPosixFilePermissions(path, perms);
+            },
             InputSource::fromMacLine),
     WIN(
             "win",
             "video={0}:audio={1}",
             "dshow",
             "DirectShow",
-            (path) -> {
-                Set<PosixFilePermission> perms = Files.getPosixFilePermissions(path);
-                perms.add(PosixFilePermission.OWNER_EXECUTE);
-                Files.setPosixFilePermissions(path, perms);
-            },
+            (path) -> {},
             InputSource::fromWinLine);
 
     private final String name;

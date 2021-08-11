@@ -20,7 +20,7 @@ import java.nio.file.Path;
 @Slf4j
 public class FfmpegInstallerImpl implements FfmpegInstaller {
 
-    public static final String FFMPEG_RESOURCES_PATH = "classpath:/bin/ffmpeg";
+    public static final String FFMPEG_RESOURCES_PATH = "classpath:/ffmpeg";
 
     private final Path executableFolder;
 
