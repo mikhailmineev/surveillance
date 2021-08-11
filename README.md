@@ -3,15 +3,8 @@
 ### Через maven
 
 ```bash
-mvnw package
+gradlew jar
 run
-```
-
-или
-
-```bash
-mvn clean
-mvn spring-boot:run
 ```
 
 ## Первый запуск
