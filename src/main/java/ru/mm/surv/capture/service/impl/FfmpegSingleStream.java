@@ -95,7 +95,7 @@ public class FfmpegSingleStream {
                 "-hls_list_size", "10",
                 "-hls_flags", "delete_segments",
                 hlsFile,
-                "-codec:a", "libvorbis",
+                "-codec:a", "aac",
                 "-b:a", "128k",
                 "-codec:v", "libx264",
                 "-pix_fmt", "yuv420p",
