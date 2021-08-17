@@ -1,7 +1,8 @@
 package ru.mm.surv.capture.service.impl;
 
-import org.springframework.beans.factory.annotation.Value;
+import org.apache.commons.io.FilenameUtils;
 import org.springframework.stereotype.Service;
+import ru.mm.surv.capture.config.FolderConfig;
 import ru.mm.surv.capture.service.RecordService;
 
 import java.io.IOException;
@@ -15,8 +16,8 @@ public class FilesystemRecordService implements RecordService {
 
     private final Path recordsFolder;
 
-    public FilesystemRecordService(@Value("${ffmpeg.mp4.folder}") Path recordsFolder) {
-        this.recordsFolder = recordsFolder;
+    public FilesystemRecordService(FolderConfig folders) {
+        this.recordsFolder = folders.getMp4();
     }
 
     @Override
@@ -25,6 +26,7 @@ public class FilesystemRecordService implements RecordService {
                 .list(recordsFolder)
                 .map(Path::getFileName)
                 .map(Path::toString)
+                .map(FilenameUtils::removeExtension)
                 .collect(Collectors.toList());
     }
 }

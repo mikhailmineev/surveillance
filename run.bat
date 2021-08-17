@@ -1,4 +1,4 @@
 @ECHO OFF
 
-java -jar target/surveillance.jar
+java -jar build/libs/surveillance.jar
 pause

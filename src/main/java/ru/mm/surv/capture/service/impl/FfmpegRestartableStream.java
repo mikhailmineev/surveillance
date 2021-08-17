@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import ru.mm.surv.capture.service.FfmpegStream;
 
 import javax.annotation.PreDestroy;
+import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Optional;
@@ -23,12 +24,11 @@ public class FfmpegRestartableStream implements FfmpegStream {
     @Autowired
     public FfmpegRestartableStream(ObjectFactory<FfmpegMultiStream> ffmpegMultiStreamFactory) {
         this.ffmpegMultiStreamFactory = ffmpegMultiStreamFactory;
-        ffmpegMultiStream = ffmpegMultiStreamFactory.getObject();
     }
 
     @Override
     public synchronized void start() {
-        if (ffmpegMultiStream == null) {
+        if (!isActive()) {
             ffmpegMultiStream = ffmpegMultiStreamFactory.getObject();
         }
         ffmpegMultiStream.start();
@@ -37,7 +37,7 @@ public class FfmpegRestartableStream implements FfmpegStream {
     @Override
     @PreDestroy
     public synchronized void stop() {
-        if (ffmpegMultiStream != null) {
+        if (isActive()) {
             ffmpegMultiStream.stop();
             ffmpegMultiStream = null;
         }
@@ -45,6 +45,9 @@ public class FfmpegRestartableStream implements FfmpegStream {
 
     @Override
     public boolean isActive() {
+        if (ffmpegMultiStream != null && !ffmpegMultiStream.isActive()) {
+            ffmpegMultiStream = null;
+        }
         return ffmpegMultiStream != null;
     }
 
@@ -54,5 +57,12 @@ public class FfmpegRestartableStream implements FfmpegStream {
                 .ofNullable(ffmpegMultiStream)
                 .map(FfmpegStream::getStreamNames)
                 .orElse(Collections.emptyList());
+    }
+
+    @Override
+    public Optional<File> getThumb(String stream) {
+        return Optional
+                .ofNullable(ffmpegMultiStream)
+                .flatMap(e -> e.getThumb(stream));
     }
 }

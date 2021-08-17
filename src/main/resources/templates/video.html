@@ -21,7 +21,7 @@
 <h2>Running streams</h2>
 <div th:each="stream : ${streams}">
     <h3>Camera <span th:text="${stream}">recorderName</span></h3>
-    <video controls>
+    <video  width="470" height="255" th:poster="@{/stream/thumb/{stream}/thumb.jpg(stream=${stream})}" controls>
         <source th:src="@{/stream/webm/{stream}/stream.webm(stream=${stream})}" type="video/webm">
         <source th:src="@{/stream/hls/{stream}/stream.m3u8(stream=${stream})}" type="application/vnd.apple.mpegurl">
     </video>
@@ -29,8 +29,8 @@
 <h2>Old records</h2>
 <div th:each="record : ${records}">
     <h3>Camera <span th:text="${record}">recorderName</span></h3>
-    <video controls>
-        <source th:src="@{/record/mp4/{record}(record=${record})}" type="video/mp4">
+    <video width="470" height="255" th:poster="@{/record/mp4/{record}/thumb.jpg(record=${record})}" controls preload="none">
+        <source th:src="@{/record/mp4/{record}/record.mp4(record=${record})}" type="video/mp4">
     </video>
 </div>
 

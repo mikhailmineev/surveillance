@@ -4,6 +4,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import ru.mm.surv.capture.config.CameraConfig;
+import ru.mm.surv.capture.config.FolderConfig;
 import ru.mm.surv.capture.config.Platform;
 import ru.mm.surv.capture.service.FfmpegInstaller;
 import ru.mm.surv.config.User;
@@ -16,38 +17,45 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.Optional;
 import java.util.concurrent.*;
+import java.util.function.Consumer;
 
 @Slf4j
 public class FfmpegSingleStream {
 
     public static final int LOG_WAIT_TIME = 100;
+    public static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss");
 
     private final Platform platform;
     private final Path ffmpeg;
-    private final ScheduledExecutorService loggingExecutor;
+    private final ScheduledExecutorService executor;
     private final String streamName;
     private final String webmAuthorization;
     private final String webmPublishUrl;
     private final String hlsFile;
     private final String mp4File;
+    private final String mp4Thumb;
+    private final Path streamThumb;
     private final CameraConfig captureConfig;
+    private final Consumer<FfmpegSingleStream> shutdownListener;
 
     private Process process;
 
     @SneakyThrows
-    public FfmpegSingleStream(Platform platform, FfmpegInstaller ffmpegInstaller, CameraConfig captureConfig, Path hlsStreamsFolder, Path mp4RecordsFolder, User user) {
+    public FfmpegSingleStream(Platform platform, FfmpegInstaller ffmpegInstaller, CameraConfig captureConfig, FolderConfig folders, User user, Consumer<FfmpegSingleStream> shutdownListener) {
         this.platform = platform;
         this.ffmpeg = ffmpegInstaller.getPath();
-        this.loggingExecutor = new ScheduledThreadPoolExecutor(1);
+        this.executor = new ScheduledThreadPoolExecutor(1);
         this.streamName = captureConfig.getName();
         this.captureConfig = captureConfig;
+        this.shutdownListener = shutdownListener;
         var basicCredentials = user.getUsername() + ":" + user.getPassword();
         var basicCredentialBytes = basicCredentials.getBytes(Charset.defaultCharset());
         this.webmAuthorization = HttpHeaders.AUTHORIZATION + ": Basic " + Base64.getEncoder().encodeToString(basicCredentialBytes);
         this.webmPublishUrl = "https://127.0.0.1:8443/stream/webm/publish/" + streamName;
 
-        Path streamFolder = hlsStreamsFolder.resolve(streamName);
+        Path streamFolder = folders.getHls().resolve(streamName);
         Files.createDirectories(streamFolder);
         Files.walk(streamFolder)
                 .filter(Files::isRegularFile)
@@ -55,10 +63,40 @@ public class FfmpegSingleStream {
                 .forEach(File::delete);
         this.hlsFile = streamFolder.resolve("stream.m3u8").toString();
 
+        Path mp4RecordsFolder = folders.getMp4();
         Files.createDirectories(mp4RecordsFolder);
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss");
-        String mp4FileName = streamName + "-" + LocalDateTime.now().format(formatter) + ".mp4";
+        String currentDate = LocalDateTime.now().format(FORMATTER);
+        String mp4FileName = streamName + "-" + currentDate + ".mp4";
         this.mp4File = mp4RecordsFolder.resolve(mp4FileName).toString();
+
+        Path mp4ThumbFolder = folders.getMp4Thumb();
+        Files.createDirectories(mp4ThumbFolder);
+        String mp4ThumbName = streamName + "-" + currentDate + ".jpg";
+        this.mp4Thumb = mp4ThumbFolder.resolve(mp4ThumbName).toString();
+
+        Path streamThumbFolder = folders.getStreamThumb();
+        Files.createDirectories(streamThumbFolder);
+        Files.walk(streamThumbFolder)
+                .filter(Files::isRegularFile)
+                .map(Path::toFile)
+                .forEach(File::delete);
+        String streamThumbName = streamName + ".jpg";
+        this.streamThumb = streamThumbFolder.resolve(streamThumbName);
+    }
+
+    public String getName() {
+        return streamName;
+    }
+
+    public Optional<File> getThumb() {
+         return Optional
+                 .of(streamThumb)
+                 .filter(Files::exists)
+                 .map(Path::toFile);
+    }
+
+    public boolean isActive() {
+        return process != null && process.isAlive();
     }
 
     @SneakyThrows
@@ -104,11 +142,19 @@ public class FfmpegSingleStream {
                 "-maxrate", "1000k",
                 "-bufsize", "1500k",
                 "-vf", "scale=-1:360",
-                mp4File
+                mp4File,
+                "-ss", "00:00:01",
+                "-vframes", "1",
+                mp4Thumb,
+                "-vf", "fps=1",
+                "-y",
+                streamThumb.toString()
+
         };
         log.debug("{} arguments: {}", streamName, Arrays.toString(args));
         process = new ProcessBuilder(args).redirectErrorStream(true).start();
-        loggingExecutor.schedule(new Logger(streamName, process.getInputStream()), LOG_WAIT_TIME, TimeUnit.MILLISECONDS);
+        executor.scheduleWithFixedDelay(new FfmpegLogger(streamName, process.getInputStream()), 0, LOG_WAIT_TIME, TimeUnit.MILLISECONDS);
+        executor.scheduleWithFixedDelay(new LivenessChecker(process, this::shutdown), 0, 100, TimeUnit.MILLISECONDS);
     }
 
     @SneakyThrows
@@ -120,39 +166,22 @@ public class FfmpegSingleStream {
             }
             if (!process.waitFor(10, TimeUnit.SECONDS)) {
                 log.error("Waiting too long for stream " + streamName + " to stop");
-            }
-            int errorCode = process.exitValue();
-            if (errorCode != 0) {
-                log.error("Stream stopped with error code " + errorCode);
+                process.destroyForcibly();
             }
         }
-        loggingExecutor.shutdownNow();
-        boolean result = loggingExecutor.awaitTermination(10, TimeUnit.SECONDS);
+        boolean result = executor.awaitTermination(10, TimeUnit.SECONDS);
         if (!result) {
             log.error("{} failed to stop log writers", streamName);
         }
     }
 
-    private static class Logger implements Runnable {
-
-        private final String streamName;
-        private final BufferedReader reader;
-
-        public Logger(String streamName, InputStream stream) {
-            this.streamName = streamName;
-            this.reader = new BufferedReader(new InputStreamReader(stream));
+    @SneakyThrows
+    private void shutdown(Process process) {
+        int errorCode = process.exitValue();
+        if (errorCode != 0) {
+            log.error("Stream stopped with error code " + errorCode);
         }
-
-        @Override
-        public void run() {
-            try {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    log.info("{} {}", streamName, line);
-                }
-            } catch (IOException e) {
-                log.error(streamName + " " + e.getMessage(), e);
-            }
-        }
+        executor.shutdown();
+        shutdownListener.accept(this);
     }
 }
