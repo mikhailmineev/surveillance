@@ -146,8 +146,8 @@ public class FfmpegSingleStream {
                 "-ss", "00:00:01",
                 "-vframes", "1",
                 mp4Thumb,
-                "-vf", "fps=1",
-                "-y",
+                "-ss", "00:00:01",
+                "-vframes", "1",
                 streamThumb.toString()
 
         };

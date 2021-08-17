@@ -55,6 +55,6 @@ test {
     useJUnitPlatform()
 }
 
-jar {
+bootJar {
     archiveFileName = "surveillance.jar"
 }

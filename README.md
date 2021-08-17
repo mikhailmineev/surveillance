@@ -3,7 +3,7 @@
 ### Через maven
 
 ```bash
-gradlew jar
+gradlew assemble
 run
 ```
 
