@@ -2,6 +2,8 @@ package ru.mm.surv.capture.config;
 
 import lombok.Data;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -17,7 +19,7 @@ public class InputSource {
         };
         String id = m.group(1);
         String name = m.group(2);
-        return new InputSource(inputType, id, name);
+        return new InputSource(inputType, id, name, Collections.emptyList());
     }
 
     public static InputSource fromWinLine(InputType inputType, String line) {
@@ -26,10 +28,11 @@ public class InputSource {
             throw new IllegalArgumentException("Can't parse line " + line);
         };
         String id = m.group(1);
-        return new InputSource(inputType, id, id);
+        return new InputSource(inputType, id, id, Collections.emptyList());
     }
 
-    public final InputType type;
-    public final String id;
-    public final String name;
+    private final InputType type;
+    private final String id;
+    private final String name;
+    private final List<InputFormat> formats;
 }

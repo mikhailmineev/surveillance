@@ -1,12 +1,14 @@
 package ru.mm.surv.config;
 
 import com.sun.security.auth.UserPrincipal;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextImpl;
 import org.springframework.security.core.userdetails.User;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 import java.security.Principal;
+import java.util.Optional;
 
 import static org.springframework.security.web.context.HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY;
 
@@ -21,19 +23,23 @@ class HttpServletRequestWrapperWithPrincipal extends HttpServletRequestWrapper {
 
     @Override
     public Principal getUserPrincipal() {
-        var userPrincipal = super.getUserPrincipal();
-        if (userPrincipal != null) {
-            return userPrincipal;
-        }
-        var attribute = request.getSession().getAttribute(SPRING_SECURITY_CONTEXT_KEY);
-        if (attribute instanceof SecurityContextImpl) {
-            var context = (SecurityContextImpl) attribute;
-            var principal = context.getAuthentication().getPrincipal();
-            if (principal instanceof User) {
-                var user = (User) principal;
-                return new UserPrincipal(user.getUsername());
-            }
-        }
-        return null;
+        return Optional
+                .ofNullable(super.getUserPrincipal())
+                .or(this::getUserPrincipalFromSession)
+                .orElse(null);
+    }
+
+    private Optional<Principal> getUserPrincipalFromSession() {
+        return Optional
+                .ofNullable(request.getSession(false))
+                .map(e -> e.getAttribute(SPRING_SECURITY_CONTEXT_KEY))
+                .filter(e -> e instanceof SecurityContextImpl)
+                .map(e -> (SecurityContextImpl) e)
+                .map(SecurityContextImpl::getAuthentication)
+                .map(Authentication::getPrincipal)
+                .filter(e -> e instanceof User)
+                .map(e -> (User) e)
+                .map(User::getUsername)
+                .map(UserPrincipal::new);
     }
 }

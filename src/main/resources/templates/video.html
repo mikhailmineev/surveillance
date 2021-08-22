@@ -5,19 +5,33 @@
     <title>Surveillance</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <meta content='width=device-width, initial-scale=1' name='viewport'/>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
 </head>
 <body>
-<h1>Surveillance</h1>
-<div sec:authorize="hasRole('ADMIN')">
-    <a href="/configure">Configure</a>
-</div>
-<div sec:authorize="hasRole('ADMIN')">
-    <a th:unless="${streamActive}" href="/stream/control/start">Start stream</a>
-    <a th:if="${streamActive}" href="/stream/control/stop">Stop stream</a>
-</div>
-<div>
-    <a href="/logout">Logout</a>
-</div>
+<div class="container">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <span class="navbar-brand mb-0 h1">Surveillance</span>
+        <div class="nav navbar-nav" id="navbarNav">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item">
+                    <a class="nav-link active" href="/">Streams <span class="sr-only">(current)</span></a>
+                </li>
+                <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                    <a class="nav-link" href="/configure">Configure</a>
+                </li>
+            </ul>
+        </div>
+        <div class="form-inline" sec:authorize="hasRole('ADMIN')">
+            <a class="btn btn-primary btn-block" th:unless="${streamActive}" href="/stream/control/start">Start stream</a>
+            <a class="btn btn-danger btn-block" th:if="${streamActive}" href="/stream/control/stop">Stop stream</a>
+        </div>
+        <div class="form-inline">
+            <a class="btn btn-outline-primary btn-block" href="/logout">Logout</a>
+        </div>
+    </nav>
 <h2>Running streams</h2>
 <div th:each="stream : ${streams}">
     <h3>Camera <span th:text="${stream}">recorderName</span></h3>
@@ -33,6 +47,6 @@
         <source th:src="@{/record/mp4/{record}/record.mp4(record=${record})}" type="video/mp4">
     </video>
 </div>
-
+</div>
 </body>
 </html>
