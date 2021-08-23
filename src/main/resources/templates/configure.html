@@ -12,26 +12,7 @@
 </head>
 <body>
 <div class="container">
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <span class="navbar-brand mb-0 h1">Surveillance</span>
-        <div class="nav navbar-nav" id="navbarNav">
-            <ul class="navbar-nav mr-auto">
-                <li class="nav-item">
-                    <a class="nav-link" href="/">Streams</a>
-                </li>
-                <li class="nav-item active" sec:authorize="hasRole('ADMIN')">
-                    <a class="nav-link" href="/configure">Configure <span class="sr-only">(current)</span></a>
-                </li>
-            </ul>
-        </div>
-        <div class="form-inline" sec:authorize="hasRole('ADMIN')">
-            <a class="btn btn-primary btn-block" th:unless="${streamActive}" href="/stream/control/start">Start stream</a>
-            <a class="btn btn-danger btn-block" th:if="${streamActive}" href="/stream/control/stop">Stop stream</a>
-        </div>
-        <div class="form-inline">
-            <a class="btn btn-outline-primary btn-block" href="/logout">Logout</a>
-        </div>
-    </nav>
+    <nav th:replace="fragments/header :: header('configure')"></nav>
 <h2>Active</h2>
 <h3>Manage</h3>
 <table class="table">
