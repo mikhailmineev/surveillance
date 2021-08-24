@@ -14,35 +14,46 @@
     <h1>Configuration</h1>
     <h2>Active</h2>
     <h3>Manage</h3>
-    <table class="table">
-        <tr>
-            <th>Name</th>
-            <th>Video</th>
-            <th>Input framerate</th>
-            <th>Input resolution</th>
-            <th>Audio</th>
-            <th colspan="2">Actions</th>
-        </tr>
-        <tr th:each="recorder : ${recorders}">
-            <td>
-                <input type="text" value="Name" th:value="${recorder.name}" disabled/>
-            </td>
-            <td>
-                <input type="text" value="Video" th:value="${recorder.video}" disabled/>
-            </td>
-            <td>
-                <input type="text" value="30" th:value="${recorder.inputFramerate}" disabled/>
-            </td>
-            <td>
-                <input type="text" value="320x240" th:value="${recorder.inputResolution}" disabled/>
-            </td>
-            <td>
-                <input type="text" value="Audio" th:value="${recorder.audio}" disabled/>
-            </td>
-            <td><button class="btn btn-primary" disabled>Update</button></td>
-            <td><button class="btn btn-danger" disabled>Delete</button></td>
-        </tr>
-    </table>
+    <div class="container p-0">
+        <div class="row" th:each="recorder : ${recorders}">
+            <div class="col-sm-auto flex-fill">
+                <label class="form-label w-100">
+                    Name
+                    <input class="form-control" type="text" value="Name" th:value="${recorder.name}" disabled/>
+                </label>
+            </div>
+            <div class="col-sm-auto flex-fill">
+                <label class="form-label w-100">
+                    Video
+                    <input class="form-control" type="text" value="Video" th:value="${recorder.video}" disabled/>
+                </label>
+            </div>
+            <div class="col-sm-auto flex-fill">
+                <label class="form-label w-100">
+                    Input framerate
+                    <input class="form-control" type="text" value="30" th:value="${recorder.inputFramerate}" disabled/>
+                </label>
+            </div>
+            <div class="col-sm-auto flex-fill">
+                <label class="form-label w-100">
+                    Input resolution
+                    <input class="form-control" type="text" value="320x240" th:value="${recorder.inputResolution}" disabled/>
+                </label>
+            </div>
+            <div class="col-sm-auto flex-fill">
+                <label class="form-label w-100">
+                    Audio
+                    <input class="form-control" type="text" value="Audio" th:value="${recorder.audio}" disabled/>
+                </label>
+            </div>
+            <div class="col-sm-auto flex-fill">
+                <button class="btn btn-primary" disabled>Update</button>
+            </div>
+            <div class="col-sm-auto flex-fill">
+                <button class="btn btn-danger" disabled>Delete</button>
+            </div>
+        </div>
+    </div>
     <h3>Add local source</h3>
     <form action="/stream/control/input" method="post">
         <table>
