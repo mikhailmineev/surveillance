@@ -1,11 +1,11 @@
 package ru.mm.surv.capture.service.impl;
 
+import lombok.SneakyThrows;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.stereotype.Service;
 import ru.mm.surv.capture.config.FolderConfig;
 import ru.mm.surv.capture.service.RecordService;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
@@ -22,7 +22,8 @@ public class FilesystemRecordService implements RecordService {
     }
 
     @Override
-    public Collection<String> getRecords() throws IOException {
+    @SneakyThrows
+    public Collection<String> getRecords() {
         if (!Files.exists(recordsFolder)){
             return Collections.emptyList();
         }

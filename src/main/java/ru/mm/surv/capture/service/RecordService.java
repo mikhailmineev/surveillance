@@ -5,5 +5,5 @@ import java.util.Collection;
 
 public interface RecordService {
 
-    Collection<String> getRecords() throws IOException;
+    Collection<String> getRecords();
 }

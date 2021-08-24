@@ -2,15 +2,16 @@ package ru.mm.surv.capture.config;
 
 import lombok.Getter;
 import org.apache.commons.lang3.SystemUtils;
-import ru.mm.surv.capture.ConsumerIO;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermission;
 import java.text.MessageFormat;
 import java.util.Set;
-import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
+import java.util.function.Consumer;
 
 @Getter
 public enum Platform {
@@ -20,9 +21,13 @@ public enum Platform {
             "avfoundation",
             "AVFoundation",
             (path) -> {
-                Set<PosixFilePermission> perms = Files.getPosixFilePermissions(path);
-                perms.add(PosixFilePermission.OWNER_EXECUTE);
-                Files.setPosixFilePermissions(path, perms);
+                try {
+                    Set<PosixFilePermission> perms = Files.getPosixFilePermissions(path);
+                    perms.add(PosixFilePermission.OWNER_EXECUTE);
+                    Files.setPosixFilePermissions(path, perms);
+                } catch (IOException e) {
+                    throw new UncheckedIOException(e);
+                }
             },
             InputSource::fromMacLine),
     WIN(
@@ -37,10 +42,10 @@ public enum Platform {
     private final String selectorFormat;
     private final String osCaptureFunction;
     private final String osCaptureName;
-    private final ConsumerIO<Path> ffmpegPostInstall;
+    private final Consumer<Path> ffmpegPostInstall;
     private final BiFunction<InputType, String, InputSource> inputSourceBuilder;
 
-    Platform(String name, String selectorFormat, String osCaptureFunction, String osCaptureName, ConsumerIO<Path> ffmpegPostInstall, BiFunction<InputType, String, InputSource> inputSourceBuilder) {
+    Platform(String name, String selectorFormat, String osCaptureFunction, String osCaptureName, Consumer<Path> ffmpegPostInstall, BiFunction<InputType, String, InputSource> inputSourceBuilder) {
         this.name = name;
         this.selectorFormat = selectorFormat;
         this.osCaptureFunction = osCaptureFunction;
