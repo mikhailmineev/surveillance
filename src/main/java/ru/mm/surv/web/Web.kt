@@ -6,22 +6,18 @@ import org.springframework.ui.set
 import ru.mm.surv.capture.service.FfmpegStream
 import ru.mm.surv.capture.repository.WebcamRepository
 import ru.mm.surv.capture.WebcamDiscovery
-import ru.mm.surv.capture.service.RecordService
 import org.springframework.web.bind.annotation.GetMapping
 
 @Controller
 class Web(
         private val ffmpegStream: FfmpegStream,
         private val webcamRepository: WebcamRepository,
-        private val webcamDiscovery: WebcamDiscovery,
-        private val recordService: RecordService) {
+        private val webcamDiscovery: WebcamDiscovery) {
 
     @GetMapping
     fun mainPage(model: Model): String {
         val streams = ffmpegStream.streamNames
         model["streams"] = streams
-        val records = recordService.records
-        model["records"] = records
         model["streamActive"] = ffmpegStream.isActive
         return "video.html"
     }
