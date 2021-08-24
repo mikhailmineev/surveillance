@@ -29,7 +29,7 @@ public class FfmpegInstallerImpl implements FfmpegInstaller {
     @Autowired
     public FfmpegInstallerImpl(@Value("${ffmpeg.folder}") Path executableFolder) {
         this.executableFolder = executableFolder;
-        this.ffmpeg = installExecutable();
+        this.ffmpeg = getFfmpegExecutable();
     }
 
     @Override
@@ -37,38 +37,44 @@ public class FfmpegInstallerImpl implements FfmpegInstaller {
         return ffmpeg;
     }
 
-    private Path installExecutable() {
-        Platform platform = Platform.getCurrent();
+    private Path getFfmpegExecutable() {
+        var platform = Platform.getCurrent();
+        var ffmpegResource = locateFfmpegResource(platform);
+        var ffmpegBinName = ffmpegResource.getFilename();
 
-        Resource ffmpegResource;
-        try {
-            log.info("Ffmpeg not installed, installing new");
-            Resource[] resources = new PathMatchingResourcePatternResolver().getResources( FFMPEG_RESOURCES_PATH + "/" + platform.getName() + "/*");
-            if (resources.length != 1) {
-                throw new RuntimeException("Failed to locate ffmpeg in distribution path");
-            }
-            ffmpegResource = resources[0];
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to locate ffmpeg in distribution path", e);
-        }
-
-        String ffmpegBinName = ffmpegResource.getFilename();
-        Path target = executableFolder.resolve(ffmpegBinName);
+        var target = executableFolder.resolve(ffmpegBinName);
         if (Files.exists(target)) {
             return target;
         }
 
+        installFfmpeg(platform, ffmpegResource, target);
+
+        return target;
+    }
+
+    private Resource locateFfmpegResource(Platform platform) {
         try {
+            var resources = new PathMatchingResourcePatternResolver().getResources( FFMPEG_RESOURCES_PATH + "/" + platform.getName() + "/*");
+            if (resources.length != 1) {
+                throw new RuntimeException("Found not 1 executable but " + resources.length);
+            }
+            return resources[0];
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to locate ffmpeg in distribution path", e);
+        }
+    }
+
+    private void installFfmpeg(Platform platform, Resource ffmpegResource, Path target) {
+        try {
+            log.info("Ffmpeg not installed, installing new");
             Files.createDirectories(executableFolder);
-            try (InputStream inputStream = ffmpegResource.getInputStream();
-                OutputStream outputStream = new FileOutputStream(target.toFile())) {
+            try (var inputStream = ffmpegResource.getInputStream();
+                 var outputStream = new FileOutputStream(target.toFile())) {
                 inputStream.transferTo(outputStream);
             }
             platform.getFfmpegPostInstall().accept(target);
-        } catch (IOException e) {
+        } catch (Exception e) {
             throw new RuntimeException("Failed to install ffmpeg", e);
         }
-
-        return target;
     }
 }

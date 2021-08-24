@@ -5,29 +5,28 @@
     <title>Surveillance</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <meta content='width=device-width, initial-scale=1' name='viewport'/>
-    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous">
-    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
 </head>
 <body>
+<nav th:replace="fragments/header :: header('video')"></nav>
 <div class="container">
-    <nav th:replace="fragments/header :: header('video')"></nav>
-<h2>Running streams</h2>
-<div th:each="stream : ${streams}">
-    <h3>Camera <span th:text="${stream}">recorderName</span></h3>
-    <video  width="470" height="255" th:poster="@{/stream/thumb/{stream}/thumb.jpg(stream=${stream})}" controls>
-        <source th:src="@{/stream/webm/{stream}/stream.webm(stream=${stream})}" type="video/webm">
-        <source th:src="@{/stream/hls/{stream}/stream.m3u8(stream=${stream})}" type="application/vnd.apple.mpegurl">
-    </video>
-</div>
-<h2>Old records</h2>
-<div th:each="record : ${records}">
-    <h3>Camera <span th:text="${record}">recorderName</span></h3>
-    <video width="470" height="255" th:poster="@{/record/mp4/{record}/thumb.jpg(record=${record})}" controls preload="none">
-        <source th:src="@{/record/mp4/{record}/record.mp4(record=${record})}" type="video/mp4">
-    </video>
-</div>
+    <h1>Streams</h1>
+    <h2>Running streams</h2>
+    <div th:each="stream : ${streams}">
+        <h3>Camera <span th:text="${stream}">recorderName</span></h3>
+        <video  width="470" height="255" th:poster="@{/stream/thumb/{stream}/thumb.jpg(stream=${stream})}" controls>
+            <source th:src="@{/stream/webm/{stream}/stream.webm(stream=${stream})}" type="video/webm">
+            <source th:src="@{/stream/hls/{stream}/stream.m3u8(stream=${stream})}" type="application/vnd.apple.mpegurl">
+        </video>
+    </div>
+    <h2>Old records</h2>
+    <div th:each="record : ${records}">
+        <h3>Camera <span th:text="${record}">recorderName</span></h3>
+        <video width="470" height="255" th:poster="@{/record/mp4/{record}/thumb.jpg(record=${record})}" controls preload="none">
+            <source th:src="@{/record/mp4/{record}/record.mp4(record=${record})}" type="video/mp4">
+        </video>
+    </div>
 </div>
 </body>
 </html>
