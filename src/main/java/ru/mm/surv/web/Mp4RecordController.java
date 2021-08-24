@@ -1,7 +1,7 @@
 package ru.mm.surv.web;
 
 import lombok.extern.slf4j.Slf4j;
-aimport org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.MediaType;
