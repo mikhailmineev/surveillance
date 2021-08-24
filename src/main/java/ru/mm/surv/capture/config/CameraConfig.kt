@@ -1,17 +1,12 @@
-package ru.mm.surv.capture.config;
+package ru.mm.surv.capture.config
 
-import lombok.Data;
+import org.springframework.boot.context.properties.ConstructorBinding
 
-@Data
-public class CameraConfig {
-
-    private String name;
-
-    private String video;
-
-    private String audio;
-
-    private String inputFramerate;
-
-    private String inputResolution;
-}
+@ConstructorBinding
+class CameraConfig(
+    val name: String,
+    val video: String,
+    val audio: String,
+    val inputFramerate: String,
+    val inputResolution: String
+)

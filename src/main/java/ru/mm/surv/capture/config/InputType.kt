@@ -1,6 +1,5 @@
-package ru.mm.surv.capture.config;
+package ru.mm.surv.capture.config
 
-public enum InputType {
-    VIDEO,
-    AUDIO;
+enum class InputType {
+    VIDEO, AUDIO
 }

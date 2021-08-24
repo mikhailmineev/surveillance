@@ -1,12 +1,10 @@
-package ru.mm.surv.config;
+package ru.mm.surv.config
 
-import lombok.Data;
+import org.springframework.boot.context.properties.ConstructorBinding
 
-import java.util.List;
-
-@Data
-public class User {
-    private String username;
-    private String password;
-    private List<UserRole> roles;
-}
+@ConstructorBinding
+class User(
+    val username: String,
+    val password: String,
+    val roles: List<UserRole>
+)

@@ -1,7 +1,5 @@
-package ru.mm.surv.config;
+package ru.mm.surv.config
 
-public enum UserRole {
-    CONSUMER,
-    PUBLISHER,
-    ADMIN
+enum class UserRole {
+    CONSUMER, PUBLISHER, ADMIN
 }

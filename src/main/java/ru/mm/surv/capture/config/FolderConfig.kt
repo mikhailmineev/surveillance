@@ -1,21 +1,14 @@
-package ru.mm.surv.capture.config;
+package ru.mm.surv.capture.config
 
-import lombok.Data;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.boot.context.properties.ConstructorBinding
+import java.nio.file.Path
 
-import java.nio.file.Path;
-
-@Data
-@Configuration
+@ConstructorBinding
 @ConfigurationProperties(prefix = "ffmpeg.folder")
-public class FolderConfig {
-
-    private Path StreamThumb;
-
-    private Path hls;
-
-    private Path mp4;
-
-    private Path mp4Thumb;
-}
+class FolderConfig(
+    val streamThumb: Path,
+    val hls: Path,
+    val mp4: Path,
+    val mp4Thumb: Path
+)

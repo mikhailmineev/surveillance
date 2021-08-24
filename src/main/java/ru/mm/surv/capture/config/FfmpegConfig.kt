@@ -1,15 +1,11 @@
-package ru.mm.surv.capture.config;
+package ru.mm.surv.capture.config
 
-import lombok.Data;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.boot.context.properties.ConstructorBinding
 
-import java.util.Map;
-
-@Data
-@Configuration
+@ConstructorBinding
 @ConfigurationProperties(prefix = "ffmpeg")
-public class FfmpegConfig {
+class FfmpegConfig(
+    val recorder: Map<String, CameraConfig>
+)
 
-    private Map<String, CameraConfig> recorder;
-}
