@@ -1,155 +1,141 @@
-package ru.mm.surv.capture;
+package ru.mm.surv.capture
 
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-import ru.mm.surv.capture.config.*;
-import ru.mm.surv.capture.service.FfmpegInstaller;
-
-import javax.annotation.PreDestroy;
-import java.io.*;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import ru.mm.surv.capture.config.CurrentPlatform.get
+import ru.mm.surv.capture.config.InputFormatFactory.fromWinLine
+import lombok.extern.slf4j.Slf4j
+import ru.mm.surv.capture.service.FfmpegInstaller
+import java.lang.Process
+import org.springframework.stereotype.Component
+import ru.mm.surv.capture.config.*
+import java.lang.ProcessBuilder
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import javax.annotation.PreDestroy
+import java.util.stream.Collectors
+import java.nio.file.Path
+import java.util.*
+import java.util.stream.Stream
 
 @Slf4j
 @Component
-public class WebcamDiscovery {
+class WebcamDiscovery(ffmpegInstaller: FfmpegInstaller) {
 
-    private final Path ffmpeg;
+    private val ffmpeg: Path = ffmpegInstaller.path()
 
-    private final Platform platform;
+    private val platform: Platform = get()
 
-    private Process process;
+    private var process: Process? = null
 
-    @Autowired
-    public WebcamDiscovery(FfmpegInstaller ffmpegInstaller) {
-        this.ffmpeg = ffmpegInstaller.path();
-        this.platform = CurrentPlatform.INSTANCE.get();
-    }
-
-    @SneakyThrows
-    public List<InputSource> getInputSources() {
-        List<InputSource> sources = getDeviceList();
-        var result = new ArrayList<InputSource>(sources.size());
-        for (InputSource source : sources) {
-            List<InputFormat> formats = getInputFormats(source);
-            var sourceWithFormats = new InputSource(source.getType(), source.getId(), source.getName(), formats);
-            result.add(sourceWithFormats);
+    fun getInputSources(): List<InputSource> {
+        val sources = getDeviceList()
+        val result = ArrayList<InputSource>(sources.size)
+        for (source in sources) {
+            val formats = getInputFormats(source)
+            val sourceWithFormats = InputSource(source.type, source.id, source.name, formats)
+            result.add(sourceWithFormats)
         }
-        return result;
+        return result
     }
 
-    private List<InputSource> getDeviceList() throws IOException {
-        process = createListDevicesProcess();
-        var getDeviceListRaw = getProcessResult(process);
-        return parse(platform, getDeviceListRaw);
+    private fun getDeviceList(): List<InputSource> {
+        process = createListDevicesProcess()
+        val getDeviceListRaw = getProcessResult(process)
+        return parse(platform, getDeviceListRaw)
     }
 
-    private Process createListDevicesProcess() throws IOException {
-        String[] args = new String[]{
-                ffmpeg.toString(),
-                "-f", platform.getOsCaptureFunction(),
-                "-list_devices", "true",
-                "-i", "dummy"
-        };
-        return new ProcessBuilder(args).redirectErrorStream(true).start();
+    private fun createListDevicesProcess(): Process {
+        val args = arrayOf(
+            ffmpeg.toString(),
+            "-f", platform.osCaptureFunction,
+            "-list_devices", "true",
+            "-i", "dummy"
+        )
+        return ProcessBuilder(*args).redirectErrorStream(true).start()
     }
 
-    private List<InputFormat> getInputFormats(InputSource source) throws IOException {
-        process = createListDeviceInfoProcess(source);
-        Stream<String> getDeviceInfoListRaw = getProcessResult(process);
-        return parseFormats(platform, getDeviceInfoListRaw);
+    private fun getInputFormats(source: InputSource): List<InputFormat> {
+        process = createListDeviceInfoProcess(source)
+        val getDeviceInfoListRaw = getProcessResult(process)
+        return parseFormats(platform, getDeviceInfoListRaw)
     }
 
-    private Process createListDeviceInfoProcess(InputSource source) throws IOException {
-        String[] args = new String[]{
-                ffmpeg.toString(),
-                "-list_options", "true",
-                "-f", platform.getOsCaptureFunction(),
-                "-i", "video=" + source.getId()
-        };
-        return new ProcessBuilder(args).redirectErrorStream(true).start();
+    private fun createListDeviceInfoProcess(source: InputSource): Process {
+        val args = arrayOf(
+            ffmpeg.toString(),
+            "-list_options", "true",
+            "-f", platform.osCaptureFunction,
+            "-i", "video=" + source.id
+        )
+        return ProcessBuilder(*args).redirectErrorStream(true).start()
     }
 
-    private Stream<String> getProcessResult(Process process) {
-        var reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-        return reader.lines();
+    private fun getProcessResult(process: Process?): Stream<String> {
+        val reader = BufferedReader(InputStreamReader(process!!.inputStream))
+        return reader.lines()
     }
 
     @PreDestroy
-    @SneakyThrows
-    public void stop() {
+    fun stop() {
         if (process != null) {
-            process.destroy();
+            process!!.destroy()
         }
     }
 
-    protected List<InputSource> parse(Platform platform, String command) {
-        var linesArray = command.split("\n");
-        var lines = Arrays.asList(linesArray);
-        return parse(platform, lines);
+    fun parse(platform: Platform, command: String): List<InputSource> {
+        val linesArray = command.split("\n").toTypedArray()
+        val lines = Arrays.asList(*linesArray)
+        return parse(platform, lines)
     }
 
-    protected List<InputSource> parse(Platform platform, Stream<String> lines) {
-        var list = lines.collect(Collectors.toList());
-        return parse(platform, list);
+    protected fun parse(platform: Platform, lines: Stream<String>): List<InputSource> {
+        val list = lines.collect(Collectors.toList())
+        return parse(platform, list)
     }
 
-    protected List<InputSource> parse(Platform platform, List<String> lines) {
-        List<InputSource> sources = new ArrayList<>();
-        InputType inputType = null;
-        for (String line : lines) {
-            if (line.contains(platform.getOsCaptureName() + " video devices")) {
-                inputType = InputType.VIDEO;
-                continue;
+    protected fun parse(platform: Platform, lines: List<String>): List<InputSource> {
+        val sources: MutableList<InputSource> = ArrayList()
+        var inputType: InputType? = null
+        for (line in lines) {
+            if (line.contains(platform.osCaptureName + " video devices")) {
+                inputType = InputType.VIDEO
+                continue
             }
-            if (line.contains(platform.getOsCaptureName() + " audio devices")) {
-                inputType = InputType.AUDIO;
-                continue;
+            if (line.contains(platform.osCaptureName + " audio devices")) {
+                inputType = InputType.AUDIO
+                continue
             }
             if (line.contains("Alternative name")) {
-                continue;
+                continue
             }
-            if (! line.startsWith("[")) {
-                continue;
+            if (!line.startsWith("[")) {
+                continue
             }
             if (inputType != null) {
-                sources.add(platform.getInputSourceBuilder().apply(inputType, line));
+                sources.add(platform.inputSourceBuilder.apply(inputType, line))
             }
         }
-        return sources;
+        return sources
     }
 
-    protected List<InputFormat> parseFormats(Platform platform, String command) {
-        var linesArray = command.split("\n");
-        var lines = Arrays.asList(linesArray);
-        return parseFormats(platform, lines);
+    protected fun parseFormats(platform: Platform, lines: Stream<String>): List<InputFormat> {
+        val list = lines.collect(Collectors.toList())
+        return parseFormats(platform, list)
     }
 
-    protected List<InputFormat> parseFormats(Platform platform, Stream<String> lines) {
-        var list = lines.collect(Collectors.toList());
-        return parseFormats(platform, list);
-    }
-
-    public List<InputFormat> parseFormats(Platform platform, List<String> lines) {
-        List<InputFormat> sources = new ArrayList<>();
-        for (String line : lines) {
-            if (line.contains(platform.getOsCaptureName() + " video device")) {
-                continue;
+    fun parseFormats(platform: Platform, lines: List<String>): List<InputFormat> {
+        val sources: MutableList<InputFormat> = ArrayList()
+        for (line in lines) {
+            if (line.contains(platform.osCaptureName + " video device")) {
+                continue
             }
-            if (! line.startsWith("[")) {
-                continue;
+            if (!line.startsWith("[")) {
+                continue
             }
-            if (! line.contains("   vcodec")) {
-                continue;
+            if (!line.contains("   vcodec")) {
+                continue
             }
-            sources.add(InputFormatFactory.INSTANCE.fromWinLine(line));
+            sources.add(fromWinLine(line))
         }
-        return sources;
+        return sources
     }
 }

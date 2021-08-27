@@ -16,19 +16,19 @@ class Web(
 
     @GetMapping
     fun mainPage(model: Model): String {
-        val streams = ffmpegStream.streamNames
+        val streams = ffmpegStream.streamNames()
         model["streams"] = streams
-        model["streamActive"] = ffmpegStream.isActive
+        model["streamActive"] = ffmpegStream.isActive()
         return "video.html"
     }
 
     @GetMapping("configure")
     fun configPage(model: Model): String {
         val recorders = webcamRepository.all()
-        val inputSources = webcamDiscovery.inputSources
+        val inputSources = webcamDiscovery.getInputSources()
         model["recorders"] = recorders
         model["inputSources"] = inputSources
-        model["streamActive"] = ffmpegStream.isActive
+        model["streamActive"] = ffmpegStream.isActive()
         return "configure.html"
     }
 }

@@ -1,75 +1,68 @@
-package ru.mm.surv.capture.service.impl;
+package ru.mm.surv.capture.service.impl
 
-import org.jetbrains.annotations.NotNull;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.beans.factory.config.ConfigurableBeanFactory;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Service;
-import ru.mm.surv.capture.config.CurrentPlatform;
-import ru.mm.surv.capture.config.FolderConfig;
-import ru.mm.surv.capture.config.Platform;
-import ru.mm.surv.capture.repository.WebcamRepository;
-import ru.mm.surv.capture.service.FfmpegInstaller;
-import ru.mm.surv.capture.service.FfmpegStream;
-import ru.mm.surv.config.Users;
-
-import java.io.File;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import ru.mm.surv.capture.config.CurrentPlatform.get
+import org.springframework.beans.factory.config.ConfigurableBeanFactory
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.annotation.Scope
+import org.springframework.stereotype.Service
+import ru.mm.surv.capture.config.FolderConfig
+import ru.mm.surv.config.Users
+import ru.mm.surv.capture.repository.WebcamRepository
+import ru.mm.surv.capture.service.FfmpegInstaller
+import ru.mm.surv.capture.service.FfmpegStream
+import java.util.HashMap
+import ru.mm.surv.capture.config.CameraConfig
+import java.io.File
+import java.util.function.Consumer
 
 @Service
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
-public class FfmpegMultiStream implements FfmpegStream {
+class FfmpegMultiStream(
+    private val folders: FolderConfig,
+    @Value("\${ffmpeg.publisher}") private val publisher: String,
+    private val users: Users,
+    private val webcamRepository: WebcamRepository,
+    private val ffmpegInstaller: FfmpegInstaller
+) : FfmpegStream {
 
-    private final Map<String, FfmpegSingleStream> recorders = new HashMap<>();
+    private val recorders: MutableMap<String, FfmpegSingleStream> = HashMap()
 
-    @Autowired
-    public FfmpegMultiStream(
-            FolderConfig folders,
-            @Value("${ffmpeg.publisher}") String publisher,
-            Users users,
-            WebcamRepository webcamRepository,
-            FfmpegInstaller ffmpegInstaller) {
-        var publishUser = users.getUsers().get(publisher);
-        webcamRepository.all().forEach((v) -> {
-            recorders.put(v.getName(), new FfmpegSingleStream(CurrentPlatform.INSTANCE.get(), ffmpegInstaller, v, folders, publishUser, this::remove));
-        });
+    @Synchronized
+    private fun remove(stream: FfmpegSingleStream) {
+        recorders.remove(stream.getName())
     }
 
-    private synchronized void remove(FfmpegSingleStream stream) {
-        recorders.remove(stream.getName());
-    }
-
-    @Override
-    public synchronized void start() {
-        recorders.forEach((s, ffmpeg) -> ffmpeg.start());
-    }
-
-    @Override
-    public synchronized void stop() {
-        recorders.forEach((s, ffmpeg) -> ffmpeg.stop());
-    }
-
-    @Override
-    public synchronized boolean isActive() {
-        return recorders.values().stream().anyMatch(FfmpegSingleStream::isActive);
-    }
-
-    @NotNull
-    @Override
-    public synchronized Collection<String> getStreamNames() {
-        return recorders.keySet();
-    }
-
-    @Override
-    public synchronized File getThumb(@NotNull String stream) {
-        var recorder = recorders.get(stream);
-        if (recorder == null) {
-            return null;
+    @Synchronized
+    override fun start() {
+        val publishUser = users.users[publisher]?: throw RuntimeException("User $publisher not found in users list")
+        webcamRepository.all().forEach {
+            recorders[it.name] = FfmpegSingleStream(
+                get(),
+                ffmpegInstaller,
+                it,
+                folders,
+                publishUser
+            ) { stream: FfmpegSingleStream -> this.remove(stream) }
         }
-        return recorder.getThumb().orElse(null);
+    }
+
+    @Synchronized
+    override fun stop() {
+        recorders.forEach { (_, ffmpeg) -> ffmpeg.stop() }
+    }
+
+    @Synchronized
+    override fun isActive(): Boolean {
+        return recorders.values.stream().anyMatch { it.isActive() }
+    }
+
+    @Synchronized
+    override fun streamNames(): Collection<String> {
+        return recorders.keys
+    }
+
+    @Synchronized
+    override fun getThumb(stream: String): File? {
+        return recorders[stream]?.getThumb()
     }
 }

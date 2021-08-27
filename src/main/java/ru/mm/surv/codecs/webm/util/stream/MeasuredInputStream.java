@@ -25,10 +25,10 @@ import java.net.SocketTimeoutException;
 import java.util.Date;
 
 public class MeasuredInputStream extends InputStream {
-    
+
     protected final InputStream base;
     protected final EventSource source;
-    
+
     public MeasuredInputStream(InputStream base, EventSource source) {
         this.base = base;
         this.source = source;
@@ -40,13 +40,13 @@ public class MeasuredInputStream extends InputStream {
         int bytes = read(buffer, 0, 1);
         return buffer[0];
     }
-    
+
     @Override
     public int read(byte[] buffer, int offset, int maxLength) throws IOException {
 
         // starting time of the transfer
         long transferStart = new Date().getTime();
-        
+
         int numBytes = 0;
         while (numBytes == 0) {
 
@@ -55,13 +55,13 @@ public class MeasuredInputStream extends InputStream {
                 numBytes = base.read(buffer, offset, maxLength);
             } catch (SocketTimeoutException e) {
             }
-            
+
         }
 
         // notification about the transfer
-        source.postEvent(new TransferEvent(source, TransferEvent.STREAM_INPUT, numBytes, new Date().getTime() - transferStart));
-        
+        source.postEvent(new TransferEvent(TransferEvent.STREAM_INPUT, numBytes, new Date().getTime() - transferStart));
+
         return numBytes;
     }
-    
+
 }

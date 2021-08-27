@@ -1,20 +1,3 @@
-/*
- * Copyright 2018 Bence Varga
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
- * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS
- * OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
-
 package ru.mm.surv.codecs.webm.incubator.streamm;
 
 import ru.mm.surv.codecs.webm.util.stream.Buffer;
@@ -22,26 +5,25 @@ import ru.mm.surv.codecs.webm.util.stream.Buffer;
 import java.io.OutputStream;
 
 public class StreamClient {
-    
+
     private Stream stream;
     private OutputStream output;
-    
+
     private boolean runs = true;
-    
-    
+
     private boolean sendHeader = true;
-    
+
     private int requestedFragmentSequence = -1;
-    
+
     private boolean sendSingleFragment = false;
-    
-    
+
+
     public StreamClient(Stream stream, OutputStream output) {
         this.stream = stream;
         this.output = output;
     }
 
-    
+
     public void setSendHeader(boolean sendHeader) {
         this.sendHeader = sendHeader;
     }
@@ -54,14 +36,14 @@ public class StreamClient {
         this.sendSingleFragment = sendSingleFragment;
     }
 
-    
+
     public void run() {
-        
+
         // report the starting of this client
-        stream.postEvent(new ServerEvent(this, stream, ServerEvent.CLIET_START));
-        
+        stream.postEvent(new ServerEvent(stream, ServerEvent.CLIET_START));
+
         if (sendHeader) {
-            
+
             // waiting for header
             byte[] header = stream.getHeader();
             while (header == null && stream.isRunning()) {
@@ -94,56 +76,56 @@ public class StreamClient {
                 Thread.sleep(1000);
             } catch (Exception e) {
             }
-            
+
         }
-        
+
         // sending fragments
         int nextSequence = requestedFragmentSequence;
         while (runs && stream.isRunning()) {
-            
+
             boolean fragmentSent = false;
-                    
+
             // while there is a new fragment is available
             int streamAge;
-            while (runs 
+            while (runs
                     && stream.isRunning()
                     && nextSequence <= (streamAge = stream.getFragmentAge())) {
-                
+
                 // notification if a fragment was skipped
                 if (nextSequence > 0 && streamAge - nextSequence > 1)
-                    stream.postEvent(new ServerEvent(this, stream, ServerEvent.CLIET_FRAGMENT_SKIP));
-                
+                    stream.postEvent(new ServerEvent(stream, ServerEvent.CLIET_FRAGMENT_SKIP));
+
                 nextSequence = streamAge + 1;
-                
+
                 // getting current movie fragment
                 MovieFragment fragment = stream.getFragment();
-                
+
                 // send the fragment data to the client
                 try {
-                    
+
                     Buffer[] buffers = fragment.getBuffers();
                     for (Buffer buffer : buffers) {
-                        
+
                         // writing data packet
                         output.write(buffer.getData(), buffer.getOffset(), buffer.getLength());
 
                     }
-                    
+
                     fragmentSent = true;
-                    
-                    // only one fragment requested: 
+
+                    // only one fragment requested:
                     if (sendSingleFragment) {
                         runs = false;
                         continue;
                     }
-            
+
                 } catch (Exception e) {
-                    
+
                     // closed connection
                     runs = false;
                 }
             }
-                        
+
             // currently no new fragment, sleeping 200 ms
             if (!fragmentSent) {
                 try {
@@ -151,17 +133,17 @@ public class StreamClient {
                 } catch (Exception e) {
                 }
             }
-            
+
         }
-        
+
         // report the stopping of thes client
-        stream.postEvent(new ServerEvent(this, stream, ServerEvent.CLIET_STOP));
-        
+        stream.postEvent(new ServerEvent(stream, ServerEvent.CLIET_STOP));
+
         try {
             output.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
-    
+
 }

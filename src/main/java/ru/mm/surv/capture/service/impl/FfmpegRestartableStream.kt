@@ -1,71 +1,49 @@
-package ru.mm.surv.capture.service.impl;
+package ru.mm.surv.capture.service.impl
 
-import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
-import org.springframework.beans.factory.ObjectFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Primary;
-import org.springframework.stereotype.Service;
-import ru.mm.surv.capture.service.FfmpegStream;
-
-import javax.annotation.PreDestroy;
-import java.io.File;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Optional;
+import org.springframework.context.annotation.Primary
+import org.springframework.beans.factory.ObjectFactory
+import org.springframework.stereotype.Service
+import ru.mm.surv.capture.service.FfmpegStream
+import java.io.File
+import javax.annotation.PreDestroy
 
 @Service
 @Primary
-@Slf4j
-public class FfmpegRestartableStream implements FfmpegStream {
+class FfmpegRestartableStream(
+    private val ffmpegMultiStreamFactory: ObjectFactory<FfmpegMultiStream>) : FfmpegStream {
+    private var ffmpegMultiStream: FfmpegMultiStream? = null
 
-    private final ObjectFactory<FfmpegMultiStream> ffmpegMultiStreamFactory;
-    private FfmpegMultiStream ffmpegMultiStream;
-
-    @Autowired
-    public FfmpegRestartableStream(ObjectFactory<FfmpegMultiStream> ffmpegMultiStreamFactory) {
-        this.ffmpegMultiStreamFactory = ffmpegMultiStreamFactory;
-    }
-
-    @Override
-    public synchronized void start() {
+    @Synchronized
+    override fun start() {
         if (!isActive()) {
-            ffmpegMultiStream = ffmpegMultiStreamFactory.getObject();
+            ffmpegMultiStream = ffmpegMultiStreamFactory.getObject()
         }
-        ffmpegMultiStream.start();
+        ffmpegMultiStream!!.start()
     }
 
-    @Override
     @PreDestroy
-    public synchronized void stop() {
+    @Synchronized
+    override fun stop() {
         if (isActive()) {
-            ffmpegMultiStream.stop();
-            ffmpegMultiStream = null;
+            ffmpegMultiStream!!.stop()
+            ffmpegMultiStream = null
         }
     }
 
-    @Override
-    public boolean isActive() {
-        if (ffmpegMultiStream != null && !ffmpegMultiStream.isActive()) {
-            ffmpegMultiStream = null;
+    override fun isActive(): Boolean {
+        if (ffmpegMultiStream != null && !ffmpegMultiStream!!.isActive()) {
+            ffmpegMultiStream = null
         }
-        return ffmpegMultiStream != null;
+        return ffmpegMultiStream != null
     }
 
-    @NotNull
-    @Override
-    public Collection<String> getStreamNames() {
-        return Optional
-                .ofNullable(ffmpegMultiStream)
-                .map(FfmpegStream::getStreamNames)
-                .orElse(Collections.emptyList());
+    override fun streamNames(): Collection<String> {
+        return ffmpegMultiStream
+            ?.streamNames()
+            ?: emptyList()
     }
 
-    @Override
-    public File getThumb(@NotNull String stream) {
-        if (ffmpegMultiStream == null) {
-            return null;
-        }
-        return ffmpegMultiStream.getThumb(stream);
+    override fun getThumb(stream: String): File? {
+        return ffmpegMultiStream?.getThumb(stream);
     }
 }

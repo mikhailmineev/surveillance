@@ -1,63 +1,31 @@
-package ru.mm.surv.capture.service.impl;
+package ru.mm.surv.capture.service.impl
 
-import org.apache.commons.io.FilenameUtils;
-import org.jetbrains.annotations.NotNull;
-import org.springframework.stereotype.Service;
-import ru.mm.surv.capture.config.FolderConfig;
-import ru.mm.surv.capture.service.RecordService;
-
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.stream.Collectors;
+import ru.mm.surv.capture.config.FolderConfig
+import ru.mm.surv.capture.service.RecordService
+import org.apache.commons.io.FilenameUtils
+import org.springframework.stereotype.Service
+import java.nio.file.Files
+import java.nio.file.Path
+import kotlin.streams.toList
 
 @Service
-public class FilesystemRecordService implements RecordService {
+class FilesystemRecordService(private val folders: FolderConfig) : RecordService {
 
-    private final FolderConfig folders;
-
-    public FilesystemRecordService(FolderConfig folders) {
-        this.folders = folders;
+    override fun records(): Collection<String> {
+        return folders.mp4.takeIf { Files.exists(it) }
+            ?.let { Files.list(it) }
+            ?.map { it.fileName }
+            ?.map(Path::toString)
+            ?.map { FilenameUtils.removeExtension(it) }
+            ?.toList()
+            ?: emptyList()
     }
 
-    @Override
-    public Collection<String> records() {
-        var recordsFolder = folders.getMp4();
-        if (!Files.exists(recordsFolder)){
-            return Collections.emptyList();
-        }
-        try {
-            return Files
-                    .list(recordsFolder)
-                    .map(Path::getFileName)
-                    .map(Path::toString)
-                    .map(FilenameUtils::removeExtension)
-                    .collect(Collectors.toList());
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
+    override fun getMp4File(record: String): Path? {
+        return folders.mp4.resolve("$record.mp4").takeIf { Files.exists(it) }
     }
 
-    @Override
-    public Path getMp4File(@NotNull String record) {
-        var recordsFolder = folders.getMp4();
-        var path = recordsFolder.resolve(record + ".mp4");
-        if (!Files.exists(path)) {
-            return null;
-        }
-        return path;
-    }
-
-    @Override
-    public Path getThumb(@NotNull String record) {
-        var thumbsFolder = folders.getMp4Thumb();
-        var path = thumbsFolder.resolve(record + ".jpg");
-        if (!Files.exists(path)) {
-            return null;
-        }
-        return path;
+    override fun getThumb(record: String): Path? {
+        return folders.mp4Thumb.resolve("$record.jpg").takeIf { Files.exists(it) }
     }
 }

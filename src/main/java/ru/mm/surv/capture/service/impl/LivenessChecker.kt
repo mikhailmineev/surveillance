@@ -1,21 +1,16 @@
-package ru.mm.surv.capture.service.impl;
+package ru.mm.surv.capture.service.impl
 
-import java.util.function.Consumer;
+import java.lang.Process
+import java.lang.Runnable
+import java.util.function.Consumer
 
-class LivenessChecker implements Runnable {
+class LivenessChecker(
+    private val process: Process,
+    private val action: Consumer<Process>) : Runnable {
 
-    private final Process process;
-    private final Consumer<Process> action;
-
-    public LivenessChecker(Process process, Consumer<Process> action) {
-        this.process = process;
-        this.action = action;
-    }
-
-    @Override
-    public void run() {
-        if (!process.isAlive()) {
-            action.accept(process);
+    override fun run() {
+        if (!process.isAlive) {
+            action.accept(process)
         }
     }
 }
