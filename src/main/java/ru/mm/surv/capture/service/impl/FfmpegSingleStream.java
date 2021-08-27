@@ -45,7 +45,7 @@ public class FfmpegSingleStream {
     @SneakyThrows
     public FfmpegSingleStream(Platform platform, FfmpegInstaller ffmpegInstaller, CameraConfig captureConfig, FolderConfig folders, User user, Consumer<FfmpegSingleStream> shutdownListener) {
         this.platform = platform;
-        this.ffmpeg = ffmpegInstaller.getPath();
+        this.ffmpeg = ffmpegInstaller.path();
         this.executor = new ScheduledThreadPoolExecutor(1);
         this.streamName = captureConfig.getName();
         this.captureConfig = captureConfig;

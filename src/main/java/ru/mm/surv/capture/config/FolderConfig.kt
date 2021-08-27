@@ -6,7 +6,7 @@ import java.nio.file.Path
 
 @ConstructorBinding
 @ConfigurationProperties(prefix = "ffmpeg.folder")
-class FolderConfig(
+data class FolderConfig(
     val streamThumb: Path,
     val hls: Path,
     val mp4: Path,

@@ -1,80 +1,74 @@
-package ru.mm.surv.capture.service.impl;
+package ru.mm.surv.capture.service.impl
 
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
-import org.springframework.stereotype.Service;
-import ru.mm.surv.capture.config.Platform;
-import ru.mm.surv.capture.service.FfmpegInstaller;
+import lombok.extern.slf4j.Slf4j
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.core.io.Resource
+import ru.mm.surv.capture.service.FfmpegInstaller
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver
+import org.springframework.stereotype.Service
+import ru.mm.surv.capture.config.CurrentPlatform
+import ru.mm.surv.capture.config.Platform
+import java.lang.RuntimeException
+import java.io.FileOutputStream
+import java.lang.Exception
+import java.nio.file.Files
+import java.nio.file.Path
 
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
+private const val FFMPEG_RESOURCES_PATH = "classpath:/ffmpeg"
 
 @Service
 @Slf4j
-public class FfmpegInstallerImpl implements FfmpegInstaller {
+class FfmpegInstallerImpl(
+    @Value("\${ffmpeg.folder}") private val executableFolder: Path) : FfmpegInstaller {
 
-    public static final String FFMPEG_RESOURCES_PATH = "classpath:/ffmpeg";
+    private val log = LoggerFactory.getLogger(FfmpegInstallerImpl::class.java)
 
-    private final Path executableFolder;
+    private val ffmpeg = getFfmpegExecutable()
 
-    private final Path ffmpeg;
-
-    @Autowired
-    public FfmpegInstallerImpl(@Value("${ffmpeg.folder}") Path executableFolder) {
-        this.executableFolder = executableFolder;
-        this.ffmpeg = getFfmpegExecutable();
-    }
-
-    @Override
-    public Path getPath() {
-        return ffmpeg;
-    }
-
-    private Path getFfmpegExecutable() {
-        var platform = Platform.getCurrent();
-        var ffmpegResource = locateFfmpegResource(platform);
-        var ffmpegBinName = ffmpegResource.getFilename();
-
-        var target = executableFolder.resolve(ffmpegBinName);
-        if (Files.exists(target)) {
-            return target;
+    private fun getFfmpegExecutable(): Path {
+            val platform = CurrentPlatform.get()
+            val ffmpegResource = locateFfmpegResource(platform)
+            val ffmpegBinName = ffmpegResource.filename ?: throw RuntimeException("No filename in resource $ffmpegResource")
+            val target = executableFolder.resolve(ffmpegBinName)
+            return executableFolder.resolve(ffmpegBinName)
+                .takeIf(Files::exists)
+                ?: installFfmpeg(platform, ffmpegResource, target)
         }
 
-        installFfmpeg(platform, ffmpegResource, target);
-
-        return target;
+    override fun path(): Path {
+        return ffmpeg
     }
 
-    private Resource locateFfmpegResource(Platform platform) {
-        try {
-            var resources = new PathMatchingResourcePatternResolver().getResources( FFMPEG_RESOURCES_PATH + "/" + platform.getName() + "/*");
-            if (resources.length != 1) {
-                throw new RuntimeException("Found not 1 executable but " + resources.length);
+    private fun locateFfmpegResource(platform: Platform): Resource {
+        return try {
+            val resources =
+                PathMatchingResourcePatternResolver().getResources(FFMPEG_RESOURCES_PATH + "/" + platform.osName + "/*")
+            val size = resources.size
+            if (size != 1) {
+                throw RuntimeException("Found not 1 executable but $size")
             }
-            return resources[0];
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to locate ffmpeg in distribution path", e);
+            resources[0]
+        } catch (e: Exception) {
+            throw RuntimeException("Failed to locate ffmpeg in distribution path", e)
         }
     }
 
-    private void installFfmpeg(Platform platform, Resource ffmpegResource, Path target) {
-        try {
-            log.info("Ffmpeg not installed, installing new");
-            Files.createDirectories(executableFolder);
-            try (var inputStream = ffmpegResource.getInputStream();
-                 var outputStream = new FileOutputStream(target.toFile())) {
-                inputStream.transferTo(outputStream);
+    private fun installFfmpeg(platform: Platform, ffmpegResource: Resource, target: Path): Path {
+        return try {
+            log.info("Ffmpeg not installed, installing new")
+            Files.createDirectories(executableFolder)
+            ffmpegResource.inputStream.use { inputStream ->
+                FileOutputStream(target.toFile()).use { outputStream ->
+                    inputStream.transferTo(
+                        outputStream
+                    )
+                }
             }
-            platform.getFfmpegPostInstall().accept(target);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to install ffmpeg", e);
+            platform.ffmpegPostInstall.accept(target)
+            target
+        } catch (e: Exception) {
+            throw RuntimeException("Failed to install ffmpeg", e)
         }
     }
 }

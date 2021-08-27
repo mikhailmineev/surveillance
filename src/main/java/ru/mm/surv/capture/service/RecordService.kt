@@ -1,14 +1,10 @@
-package ru.mm.surv.capture.service;
+package ru.mm.surv.capture.service
 
-import java.nio.file.Path;
-import java.util.Collection;
-import java.util.Optional;
+import java.nio.file.Path
+import java.util.*
 
-public interface RecordService {
-
-    Collection<String> getRecords();
-
-    Optional<Path> getMp4File(String record);
-
-    Optional<Path> getThumb(String record);
+interface RecordService {
+    fun records(): Collection<String>
+    fun getMp4File(record: String): Path?
+    fun getThumb(record: String): Path?
 }

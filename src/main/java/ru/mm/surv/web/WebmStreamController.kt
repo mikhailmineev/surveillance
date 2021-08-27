@@ -1,130 +1,126 @@
-package ru.mm.surv.web;
+package ru.mm.surv.web
 
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.*;
-import ru.mm.surv.codecs.webm.incubator.streamm.ControlledStream;
-import ru.mm.surv.codecs.webm.incubator.streamm.StreamClient;
-import ru.mm.surv.codecs.webm.incubator.streamm.StreamInput;
-import ru.mm.surv.codecs.webm.util.stream.MeasuredInputStream;
-import ru.mm.surv.codecs.webm.util.stream.MeasuredOutputStream;
+import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.RequestMapping
+import lombok.extern.slf4j.Slf4j
+import org.slf4j.LoggerFactory
+import ru.mm.surv.codecs.webm.incubator.streamm.ControlledStream
+import java.util.concurrent.ConcurrentHashMap
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.ResponseBody
+import org.springframework.web.bind.annotation.PathVariable
+import javax.servlet.http.HttpServletRequest
+import ru.mm.surv.codecs.webm.util.stream.MeasuredInputStream
+import ru.mm.surv.codecs.webm.incubator.streamm.StreamInput
+import java.io.IOException
+import org.springframework.web.bind.annotation.GetMapping
+import javax.servlet.http.HttpServletResponse
+import org.springframework.web.bind.annotation.RequestParam
+import ru.mm.surv.codecs.webm.util.stream.MeasuredOutputStream
+import ru.mm.surv.codecs.webm.incubator.streamm.StreamClient
+import java.io.UncheckedIOException
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+private const val MIME_TYPE_WEBM = "video/webm; codecs=\"vp8,vorbis\""
+private const val STR_CONTENT_TYPE = "Content-type"
+private const val STR_X_SEQUENCE = "X-Sequence"
+private const val PACKET_SIZE = 24 * 1024
 
 @RestController
 @RequestMapping("stream/webm")
-@Slf4j
-public class WebmStreamController {
+class WebmStreamController {
 
-    private final String MIME_TYPE_WEBM = "video/webm; codecs=\"vp8,vorbis\"";
-    private final String STR_CONTENT_TYPE = "Content-type";
-    private final String STR_X_SEQUENCE = "X-Sequence";
+    private val log = LoggerFactory.getLogger(WebmStreamController::class.java)
 
-    protected Map<String, ControlledStream> streams = new ConcurrentHashMap<>();
+    private val streams: MutableMap<String, ControlledStream> = ConcurrentHashMap()
 
     @PostMapping("publish/{streamId}")
     @ResponseBody
-    public void publish(@PathVariable String streamId, HttpServletRequest request) {
+    fun publish(@PathVariable streamId: String, request: HttpServletRequest) {
+        // stopping stream if already isRunning
+        val oldStream = streams[streamId]
+        oldStream?.stop()
+        // creating new Sream instance
+        val stream = ControlledStream(10)
+        stream.mimeType = MIME_TYPE_WEBM
+        // put stream to in the collection
+        streams[streamId] = stream
+        // generate transfer events to mesaure bandwidth usage
+        val mis = MeasuredInputStream(request.inputStream, stream)
+        // creating input reader
+        val streamInput = StreamInput(stream, mis)
+        /*
+         * Start publishing
+         */
+        // this thread is working (will be blocked) while the stream is being published
         try {
-            // stopping stream if already isRunning
-            ControlledStream stream = streams.get(streamId);
-            if (stream != null) {
-                stream.stop();
-            }
-            // creating new Sream instance
-            stream = new ControlledStream(10);
-            stream.setMimeType(MIME_TYPE_WEBM);
-            // put stream to in the collection
-            streams.put(streamId, stream);
-            // generate transfer events to mesaure bandwidth usage
-            MeasuredInputStream mis = new MeasuredInputStream(request.getInputStream(), stream);
-            // creating input reader
-            StreamInput streamInput = new StreamInput(stream, mis);
-            /*
-             * Start publishing
-             */
-            // this thread is working (will be blocked) while the stream is being published
-            try {
-                streamInput.run();
-            } catch (IOException e) {
-                log.warn("Stream stopped: {}", e.getMessage());
-            }
-            /*
-             * End of publishing
-             */
-            // stopping stream (clients get notified)
-            stream.stop();
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
+            streamInput.run()
+        } catch (e: IOException) {
+            log.warn("Stream stopped: {}", e.message)
         }
+        /*
+         * End of publishing
+         */
+        // stopping stream (clients get notified)
+        stream.stop()
     }
 
-    @GetMapping(value = "{streamId}/stream.webm", produces = MIME_TYPE_WEBM)
-    public void consume(@PathVariable String streamId, HttpServletResponse response,
-                        @RequestParam(name = "sendHeader", defaultValue = "true") String sendHeaderParam,
-                        @RequestParam(name = "fragmentSequence", defaultValue = "-1") String fragmentSequenceParam,
-                        @RequestParam(name = "singleFragment", defaultValue = "false") String singleFragmentParam) {
-        try {
-            // getting stream
-            ControlledStream stream = streams.get(streamId);
-            if (stream == null || !stream.isRunning()) {
-                throw new HttpException(503, "Stream Not Running");
-            }
-
-            // setting rsponse content-type
-            response.addHeader(STR_CONTENT_TYPE, stream.getMimeType());
-
-            // request GET parameters
-            boolean sendHeader = !("0".equals(sendHeaderParam) || "false".equals(sendHeaderParam));
-            int fragmentSequence = Integer.parseInt(fragmentSequenceParam, 10);
-            boolean singleFragment = !("0".equals(singleFragmentParam) || "false".equals(singleFragmentParam));
-
-            // setting rsponse sequence number (if needed)
-            if (singleFragment) {
-                String sequenceHeader;
-
-                if (fragmentSequence > stream.getFragmentAge()) {
-                    sequenceHeader = Integer.toString(fragmentSequence);
-                } else {
-                    sequenceHeader = Integer.toString(stream.getFragmentAge());
-                }
-                response.addHeader(STR_X_SEQUENCE, sequenceHeader);
-            }
-
-            // check if there are free slots
-            if (!stream.subscribe(false)) {
-                throw new HttpException(503, "Resource Busy");
-            }
-
-            // log transfer events (bandwidth usage)
-            final int PACKET_SIZE = 24 * 1024;
-            MeasuredOutputStream mos = new MeasuredOutputStream(response.getOutputStream(), stream, PACKET_SIZE);
-
-            // create a client
-            StreamClient client = new StreamClient(stream, mos);
-
-            // whether to send header
-            client.setSendHeader(sendHeader);
-
-            // start output with the requested fragment
-            if (fragmentSequence > 0) {
-                client.setRequestedFragmentSequence(fragmentSequence);
-            }
-
-            // send only a single fragment
-            client.setSendSingleFragment(singleFragment);
-
-            // serving the request (from this thread)
-            client.run();
-
-            // freeing the slot
-            stream.unsubscribe();
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
+    @GetMapping(value = ["{streamId}/stream.webm"], produces = [MIME_TYPE_WEBM])
+    fun consume(
+        @PathVariable streamId: String, response: HttpServletResponse,
+        @RequestParam(name = "sendHeader", defaultValue = "true") sendHeaderParam: String,
+        @RequestParam(name = "fragmentSequence", defaultValue = "-1") fragmentSequenceParam: String,
+        @RequestParam(name = "singleFragment", defaultValue = "false") singleFragmentParam: String
+    ) {
+        // getting stream
+        val stream = streams[streamId]
+        if (stream == null || !stream.isRunning) {
+            throw HttpException(503, "Stream Not Running")
         }
+
+        // setting rsponse content-type
+        response.addHeader(STR_CONTENT_TYPE, stream.mimeType)
+
+        // request GET parameters
+        val sendHeader = !("0" == sendHeaderParam || "false" == sendHeaderParam)
+        val fragmentSequence = fragmentSequenceParam.toInt(10)
+        val singleFragment = !("0" == singleFragmentParam || "false" == singleFragmentParam)
+
+        // setting rsponse sequence number (if needed)
+        if (singleFragment) {
+            val sequenceHeader = if (fragmentSequence > stream.fragmentAge) {
+                fragmentSequence.toString()
+            } else {
+                stream.fragmentAge.toString()
+            }
+            response.addHeader(STR_X_SEQUENCE, sequenceHeader)
+        }
+
+        // check if there are free slots
+        if (!stream.subscribe(false)) {
+            throw HttpException(503, "Resource Busy")
+        }
+
+        // log transfer events (bandwidth usage)
+        val mos = MeasuredOutputStream(response.outputStream, stream, PACKET_SIZE)
+
+        // create a client
+        val client = StreamClient(stream, mos)
+
+        // whether to send header
+        client.setSendHeader(sendHeader)
+
+        // start output with the requested fragment
+        if (fragmentSequence > 0) {
+            client.setRequestedFragmentSequence(fragmentSequence)
+        }
+
+        // send only a single fragment
+        client.setSendSingleFragment(singleFragment)
+
+        // serving the request (from this thread)
+        client.run()
+
+        // freeing the slot
+        stream.unsubscribe()
     }
 }

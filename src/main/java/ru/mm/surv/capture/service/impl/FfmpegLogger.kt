@@ -1,32 +1,29 @@
-package ru.mm.surv.capture.service.impl;
+package ru.mm.surv.capture.service.impl
 
-import lombok.extern.slf4j.Slf4j;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import lombok.extern.slf4j.Slf4j
+import org.slf4j.LoggerFactory
+import java.lang.Runnable
+import java.io.BufferedReader
+import java.io.IOException
+import java.io.InputStream
+import java.io.InputStreamReader
 
 @Slf4j
-class FfmpegLogger implements Runnable {
+internal class FfmpegLogger(private val streamName: String, stream: InputStream) : Runnable {
 
-    private final String streamName;
-    private final BufferedReader reader;
+    private val log = LoggerFactory.getLogger(FfmpegLogger::class.java)
 
-    public FfmpegLogger(String streamName, InputStream stream) {
-        this.streamName = streamName;
-        this.reader = new BufferedReader(new InputStreamReader(stream));
-    }
+    private val reader = BufferedReader(InputStreamReader(stream))
 
-    @Override
-    public void run() {
+    override fun run() {
         try {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                log.info("{} {}", streamName, line);
+            var line: String?
+            while (reader.readLine().also { line = it } != null) {
+                log.info("{} {}", streamName, line)
             }
-        } catch (IOException e) {
-            log.error(streamName + " " + e.getMessage(), e);
+        } catch (e: IOException) {
+            val errorMessage = e.message
+            log.error("$streamName $errorMessage", e)
         }
     }
 }

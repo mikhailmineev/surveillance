@@ -5,7 +5,7 @@ import org.springframework.boot.context.properties.ConstructorBinding
 
 @ConstructorBinding
 @ConfigurationProperties(prefix = "ffmpeg")
-class FfmpegConfig(
+data class FfmpegConfig(
     val recorder: Map<String, CameraConfig>
 )
 

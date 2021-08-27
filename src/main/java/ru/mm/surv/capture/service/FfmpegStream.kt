@@ -1,18 +1,12 @@
-package ru.mm.surv.capture.service;
+package ru.mm.surv.capture.service
 
-import java.io.File;
-import java.util.Collection;
-import java.util.Optional;
+import java.io.File
+import java.util.*
 
-public interface FfmpegStream {
-
-    void start();
-
-    void stop();
-
-    boolean isActive();
-
-    Collection<String> getStreamNames();
-
-    Optional<File> getThumb(String stream);
+interface FfmpegStream {
+    fun start()
+    fun stop()
+    val isActive: Boolean
+    val streamNames: Collection<String>
+    fun getThumb(stream: String): File?
 }

@@ -1,17 +1,16 @@
-package ru.mm.surv.web;
+package ru.mm.surv.web
 
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ControllerAdvice;
-import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ControllerAdvice
+import lombok.extern.slf4j.Slf4j
+import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.ExceptionHandler
 
 @ControllerAdvice
 @Slf4j
-public class GlobalExceptionHandler {
+class GlobalExceptionHandler {
 
-    @ExceptionHandler(HttpException.class)
-    public ResponseEntity<String> handleException(HttpException e) {
-        return ResponseEntity.status(e.getCode()).body(e.getMessage());
+    @ExceptionHandler(HttpException::class)
+    fun handleException(e: HttpException): ResponseEntity<String> {
+        return ResponseEntity.status(e.code).body(e.message)
     }
-
 }

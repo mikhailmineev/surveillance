@@ -24,7 +24,7 @@ class Web(
 
     @GetMapping("configure")
     fun configPage(model: Model): String {
-        val recorders = webcamRepository.all
+        val recorders = webcamRepository.all()
         val inputSources = webcamDiscovery.inputSources
         model["recorders"] = recorders
         model["inputSources"] = inputSources

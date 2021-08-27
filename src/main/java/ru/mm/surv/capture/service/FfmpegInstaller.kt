@@ -1,7 +1,7 @@
-package ru.mm.surv.capture.service;
+package ru.mm.surv.capture.service
 
-import java.nio.file.Path;
+import java.nio.file.Path
 
-public interface FfmpegInstaller {
-    Path getPath();
+interface FfmpegInstaller {
+    fun path(): Path
 }

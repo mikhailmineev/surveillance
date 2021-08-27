@@ -1,16 +1,5 @@
-package ru.mm.surv.web;
+package ru.mm.surv.web
 
-public class HttpException extends RuntimeException {
+import java.lang.RuntimeException
 
-    private int code;
-
-    public HttpException(int code, String msg) {
-        super(msg);
-        this.code = code;
-    }
-
-    public int getCode() {
-        return code;
-    }
-
-}
+class HttpException(val code: Int, msg: String) : RuntimeException(msg)

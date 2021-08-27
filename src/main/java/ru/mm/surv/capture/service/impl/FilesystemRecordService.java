@@ -1,6 +1,7 @@
 package ru.mm.surv.capture.service.impl;
 
 import org.apache.commons.io.FilenameUtils;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 import ru.mm.surv.capture.config.FolderConfig;
 import ru.mm.surv.capture.service.RecordService;
@@ -11,7 +12,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -24,7 +24,7 @@ public class FilesystemRecordService implements RecordService {
     }
 
     @Override
-    public Collection<String> getRecords() {
+    public Collection<String> records() {
         var recordsFolder = folders.getMp4();
         if (!Files.exists(recordsFolder)){
             return Collections.emptyList();
@@ -42,22 +42,22 @@ public class FilesystemRecordService implements RecordService {
     }
 
     @Override
-    public Optional<Path> getMp4File(String record) {
+    public Path getMp4File(@NotNull String record) {
         var recordsFolder = folders.getMp4();
         var path = recordsFolder.resolve(record + ".mp4");
         if (!Files.exists(path)) {
-            return Optional.empty();
+            return null;
         }
-        return Optional.of(path);
+        return path;
     }
 
     @Override
-    public Optional<Path> getThumb(String record) {
+    public Path getThumb(@NotNull String record) {
         var thumbsFolder = folders.getMp4Thumb();
         var path = thumbsFolder.resolve(record + ".jpg");
         if (!Files.exists(path)) {
-            return Optional.empty();
+            return null;
         }
-        return Optional.of(path);
+        return path;
     }
 }

@@ -1,10 +1,7 @@
-package ru.mm.surv.capture.repository;
+package ru.mm.surv.capture.repository
 
-import ru.mm.surv.capture.config.CameraConfig;
+import ru.mm.surv.capture.config.CameraConfig
 
-import java.util.Collection;
-
-public interface WebcamRepository {
-
-    Collection<CameraConfig> getAll();
+interface WebcamRepository {
+    fun all(): Collection<CameraConfig>
 }

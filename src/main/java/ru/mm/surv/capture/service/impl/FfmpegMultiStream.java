@@ -1,10 +1,12 @@
 package ru.mm.surv.capture.service.impl;
 
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
+import ru.mm.surv.capture.config.CurrentPlatform;
 import ru.mm.surv.capture.config.FolderConfig;
 import ru.mm.surv.capture.config.Platform;
 import ru.mm.surv.capture.repository.WebcamRepository;
@@ -32,8 +34,8 @@ public class FfmpegMultiStream implements FfmpegStream {
             WebcamRepository webcamRepository,
             FfmpegInstaller ffmpegInstaller) {
         var publishUser = users.getUsers().get(publisher);
-        webcamRepository.getAll().forEach((v) -> {
-            recorders.put(v.getName(), new FfmpegSingleStream(Platform.getCurrent(), ffmpegInstaller, v, folders, publishUser, this::remove));
+        webcamRepository.all().forEach((v) -> {
+            recorders.put(v.getName(), new FfmpegSingleStream(CurrentPlatform.INSTANCE.get(), ffmpegInstaller, v, folders, publishUser, this::remove));
         });
     }
 
@@ -56,13 +58,18 @@ public class FfmpegMultiStream implements FfmpegStream {
         return recorders.values().stream().anyMatch(FfmpegSingleStream::isActive);
     }
 
+    @NotNull
     @Override
     public synchronized Collection<String> getStreamNames() {
         return recorders.keySet();
     }
 
     @Override
-    public synchronized Optional<File> getThumb(String stream) {
-        return Optional.ofNullable(recorders.get(stream)).flatMap(FfmpegSingleStream::getThumb);
+    public synchronized File getThumb(@NotNull String stream) {
+        var recorder = recorders.get(stream);
+        if (recorder == null) {
+            return null;
+        }
+        return recorder.getThumb().orElse(null);
     }
 }

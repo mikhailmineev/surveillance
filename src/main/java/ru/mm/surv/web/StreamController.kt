@@ -1,40 +1,37 @@
-package ru.mm.surv.web;
+package ru.mm.surv.web
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.view.RedirectView;
-import ru.mm.surv.capture.service.FfmpegStream;
+import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.beans.factory.annotation.Autowired
+import ru.mm.surv.capture.service.FfmpegStream
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.RequestHeader
+import org.springframework.web.servlet.view.RedirectView
+import org.springframework.web.bind.annotation.PostMapping
 
 @RestController
 @RequestMapping("stream/control")
-public class StreamController {
-
-    private final FfmpegStream ffmpegStream;
-
-    @Autowired
-    public StreamController(FfmpegStream ffmpegStream) {
-        this.ffmpegStream = ffmpegStream;
-    }
+class StreamController @Autowired constructor(private val ffmpegStream: FfmpegStream) {
 
     @GetMapping("start")
-    public RedirectView startUrl(@RequestHeader("Referer") String referer) {
-        ffmpegStream.start();
-        return new RedirectView(referer);
+    fun startUrl(@RequestHeader("Referer") referer: String): RedirectView {
+        ffmpegStream.start()
+        return RedirectView(referer)
     }
 
     @PostMapping("start")
-    public void start() {
-        ffmpegStream.start();
+    fun start() {
+        ffmpegStream.start()
     }
 
     @GetMapping("stop")
-    public RedirectView stopUrl(@RequestHeader("Referer") String referer)  {
-        ffmpegStream.stop();
-        return new RedirectView(referer);
+    fun stopUrl(@RequestHeader("Referer") referer: String): RedirectView {
+        ffmpegStream.stop()
+        return RedirectView(referer)
     }
 
     @PostMapping("stop")
-    public void stop()  {
-        ffmpegStream.stop();
+    fun stop() {
+        ffmpegStream.stop()
     }
 }

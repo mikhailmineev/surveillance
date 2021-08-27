@@ -1,6 +1,7 @@
 package ru.mm.surv.capture.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
@@ -51,6 +52,7 @@ public class FfmpegRestartableStream implements FfmpegStream {
         return ffmpegMultiStream != null;
     }
 
+    @NotNull
     @Override
     public Collection<String> getStreamNames() {
         return Optional
@@ -60,9 +62,10 @@ public class FfmpegRestartableStream implements FfmpegStream {
     }
 
     @Override
-    public Optional<File> getThumb(String stream) {
-        return Optional
-                .ofNullable(ffmpegMultiStream)
-                .flatMap(e -> e.getThumb(stream));
+    public File getThumb(@NotNull String stream) {
+        if (ffmpegMultiStream == null) {
+            return null;
+        }
+        return ffmpegMultiStream.getThumb(stream);
     }
 }

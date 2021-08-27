@@ -1,31 +1,29 @@
-package ru.mm.surv.web;
+package ru.mm.surv.web
 
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import ru.mm.surv.capture.config.FolderConfig;
-
-import java.nio.file.Files;
-import java.nio.file.Path;
+import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.RequestMapping
+import ru.mm.surv.capture.config.FolderConfig
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.http.ResponseEntity
+import org.springframework.core.io.FileSystemResource
+import java.nio.file.Files
+import java.nio.file.Path
 
 @RestController
 @RequestMapping("stream/hls")
-public class HlsStreamController {
+class HlsStreamController(folders: FolderConfig) {
+    private val hlsFolder: Path = folders.hls
 
-    private final Path hlsFolder;
-
-    public HlsStreamController(FolderConfig folders) {
-        this.hlsFolder = folders.getHls();
-    }
-
-    @GetMapping(value = "/{streamId}/{fileName}", produces = "application/vnd.apple.mpegurl")
-    public ResponseEntity<FileSystemResource> getFile(
-            @PathVariable("streamId") String streamId,
-            @PathVariable("fileName") String fileName) {
-        Path path = hlsFolder.resolve(streamId).resolve(fileName);
-        if (!Files.exists(path)) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(new FileSystemResource(path));
+    @GetMapping(value = ["/{streamId}/{fileName}"], produces = ["application/vnd.apple.mpegurl"])
+    fun getFile(
+        @PathVariable("streamId") streamId: String,
+        @PathVariable("fileName") fileName: String
+    ): ResponseEntity<FileSystemResource> {
+        return hlsFolder.resolve(streamId).resolve(fileName)
+            .takeIf(Files::exists)
+            ?.let(::FileSystemResource)
+            ?.let { ResponseEntity.ok(it) }
+            ?:ResponseEntity.notFound().build()
     }
 }

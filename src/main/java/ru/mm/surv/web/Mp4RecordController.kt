@@ -1,62 +1,43 @@
-package ru.mm.surv.web;
+package ru.mm.surv.web
 
-import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.InputStreamResource;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import ru.mm.surv.capture.service.RecordService;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.UncheckedIOException;
-import java.nio.file.Path;
-import java.util.Collection;
+import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.RequestMapping
+import lombok.extern.slf4j.Slf4j
+import ru.mm.surv.capture.service.RecordService
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.http.ResponseEntity
+import org.springframework.core.io.FileSystemResource
+import org.springframework.core.io.InputStreamResource
+import org.springframework.http.MediaType
+import java.io.FileInputStream
 
 @RestController
 @RequestMapping("record/mp4")
 @Slf4j
-public class Mp4RecordController {
-
-    private final RecordService recordService;
-
-    public Mp4RecordController(RecordService recordService) {
-        this.recordService = recordService;
-    }
+class Mp4RecordController(private val recordService: RecordService) {
 
     @GetMapping
-    public Collection<String> getRecords() {
-        return recordService.getRecords();
+    fun records() : Collection<String> {
+        return recordService.records()
     }
 
-    @GetMapping(path = "/{record}/record.mp4", produces = "video/mp4")
-    public ResponseEntity<FileSystemResource> getFile(@PathVariable("record") String record) {
+    @GetMapping(path = ["/{record}/record.mp4"], produces = ["video/mp4"])
+    fun getFile(@PathVariable("record") record: String): ResponseEntity<FileSystemResource> {
         return recordService
-                .getMp4File(record)
-                .map(FileSystemResource::new)
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+            .getMp4File(record)
+            ?.let(::FileSystemResource)
+            ?.let { ResponseEntity.ok(it) }
+            ?: ResponseEntity.notFound().build()
     }
 
-    @GetMapping(path = "/{record}/thumb.jpg", produces = MediaType.IMAGE_JPEG_VALUE)
-    public ResponseEntity<InputStreamResource> thumb(@PathVariable("record") String record) {
+    @GetMapping(path = ["/{record}/thumb.jpg"], produces = [MediaType.IMAGE_JPEG_VALUE])
+    fun thumb(@PathVariable("record") record: String): ResponseEntity<InputStreamResource> {
         return recordService.getThumb(record)
-                .map(Path::toFile)
-                .map(this::getFileInputStream)
-                .map(InputStreamResource::new)
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
-    }
-
-    @NotNull
-    private FileInputStream getFileInputStream(File e) {
-        try {
-            return new FileInputStream(e);
-        } catch (FileNotFoundException ex) {
-            throw new UncheckedIOException(ex);
-        }
+            ?.toFile()
+            ?.let(::FileInputStream)
+            ?.let(::InputStreamResource)
+            ?.let { ResponseEntity.ok(it) }
+            ?: ResponseEntity.notFound().build()
     }
 }

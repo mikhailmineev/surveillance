@@ -4,10 +4,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ru.mm.surv.capture.config.InputFormat;
-import ru.mm.surv.capture.config.InputSource;
-import ru.mm.surv.capture.config.InputType;
-import ru.mm.surv.capture.config.Platform;
+import ru.mm.surv.capture.config.*;
 import ru.mm.surv.capture.service.FfmpegInstaller;
 
 import javax.annotation.PreDestroy;
@@ -31,8 +28,8 @@ public class WebcamDiscovery {
 
     @Autowired
     public WebcamDiscovery(FfmpegInstaller ffmpegInstaller) {
-        this.ffmpeg = ffmpegInstaller.getPath();
-        this.platform = Platform.getCurrent();
+        this.ffmpeg = ffmpegInstaller.path();
+        this.platform = CurrentPlatform.INSTANCE.get();
     }
 
     @SneakyThrows
@@ -151,7 +148,7 @@ public class WebcamDiscovery {
             if (! line.contains("   vcodec")) {
                 continue;
             }
-            sources.add(InputFormat.fromWinLine(line));
+            sources.add(InputFormatFactory.INSTANCE.fromWinLine(line));
         }
         return sources;
     }
