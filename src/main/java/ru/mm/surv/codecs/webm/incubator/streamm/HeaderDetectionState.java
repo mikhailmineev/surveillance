@@ -28,17 +28,15 @@ class HeaderDetectionState implements Processor {
     private static final long ID_TRACKTYPE = 0x83;
     private static final long ID_TRACKNUMBER = 0xD7;
     private static final long TRACK_TYPE_VIDEO = 1;
-    
-    private StreamInput input;
-    private Stream stream;
+
+    private final Stream stream;
     
     private long videoTrackNumber = 0;
     private boolean finished = false;
     
     private static final byte[] infiniteSegment = {0x18, 0x53, (byte)0x80, 0x67, 0x01, (byte)0xFF, (byte)0xFF, (byte)0xFF, (byte)0xFF, (byte)0xFF, (byte)0xFF, (byte)0xFF};
         
-    public HeaderDetectionState(StreamInput input, Stream stream) {
-        this.input = input;
+    public HeaderDetectionState(Stream stream) {
         this.stream = stream;
     }
 

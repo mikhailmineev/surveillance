@@ -44,6 +44,6 @@ class FfmpegRestartableStream(
     }
 
     override fun getThumb(stream: String): File? {
-        return ffmpegMultiStream?.getThumb(stream);
+        return ffmpegMultiStream?.getThumb(stream)
     }
 }

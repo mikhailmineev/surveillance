@@ -83,7 +83,7 @@ class WebcamDiscovery(ffmpegInstaller: FfmpegInstaller) {
 
     fun parse(platform: Platform, command: String): List<InputSource> {
         val linesArray = command.split("\n").toTypedArray()
-        val lines = Arrays.asList(*linesArray)
+        val lines = listOf(*linesArray)
         return parse(platform, lines)
     }
 

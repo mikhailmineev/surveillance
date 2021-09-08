@@ -6,8 +6,8 @@ import java.io.OutputStream;
 
 public class StreamClient {
 
-    private Stream stream;
-    private OutputStream output;
+    private final Stream stream;
+    private final OutputStream output;
 
     private boolean runs = true;
 
@@ -40,7 +40,7 @@ public class StreamClient {
     public void run() {
 
         // report the starting of this client
-        stream.postEvent(new ServerEvent(stream, ServerEvent.CLIET_START));
+        stream.postEvent(new ServerEvent(ServerEvent.CLIET_START));
 
         if (sendHeader) {
 
@@ -93,7 +93,7 @@ public class StreamClient {
 
                 // notification if a fragment was skipped
                 if (nextSequence > 0 && streamAge - nextSequence > 1)
-                    stream.postEvent(new ServerEvent(stream, ServerEvent.CLIET_FRAGMENT_SKIP));
+                    stream.postEvent(new ServerEvent(ServerEvent.CLIET_FRAGMENT_SKIP));
 
                 nextSequence = streamAge + 1;
 
@@ -116,7 +116,6 @@ public class StreamClient {
                     // only one fragment requested:
                     if (sendSingleFragment) {
                         runs = false;
-                        continue;
                     }
 
                 } catch (Exception e) {
@@ -137,7 +136,7 @@ public class StreamClient {
         }
 
         // report the stopping of thes client
-        stream.postEvent(new ServerEvent(stream, ServerEvent.CLIET_STOP));
+        stream.postEvent(new ServerEvent(ServerEvent.CLIET_STOP));
 
         try {
             output.close();

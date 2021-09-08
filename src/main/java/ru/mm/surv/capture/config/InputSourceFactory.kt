@@ -4,7 +4,7 @@ import java.util.regex.Pattern
 
 object InputSourceFactory {
     private val MAC_PATTERN = Pattern.compile("\\[.*] \\[(\\d)] (.*)")
-    private val WIN_PATTERN = Pattern.compile("\\[.*]  \"(.*)\"")
+    private val WIN_PATTERN = Pattern.compile("\\[.*] {2}\"(.*)\"")
 
     fun fromMacLine(inputType: InputType, line: String): InputSource {
         val m = MAC_PATTERN.matcher(line)

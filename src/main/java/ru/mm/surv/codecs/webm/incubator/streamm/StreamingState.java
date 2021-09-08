@@ -28,14 +28,12 @@ class StreamingState implements Processor {
 
     private long clusterTimeCode = 0;
 
-    private StreamInput input;
-    private Stream stream;
-    private long videoTrackNumber;
+    private final Stream stream;
+    private final long videoTrackNumber;
 
     private MatroskaFragment fragment;
 
-    public StreamingState(StreamInput input, Stream stream, long videoTrackNumber) {
-        this.input = input;
+    public StreamingState(Stream stream, long videoTrackNumber) {
         this.stream = stream;
         this.videoTrackNumber = videoTrackNumber;
         fragment = new MatroskaFragment();
@@ -120,7 +118,7 @@ class StreamingState implements Processor {
                             fragment.openCluster(clusterTimeCode);
 
                             // notification about starting the input process
-                            stream.postEvent(new ServerEvent(stream, ServerEvent.INPUT_FRAGMENT_START));
+                            stream.postEvent(new ServerEvent(ServerEvent.INPUT_FRAGMENT_START));
 
                             if ((flags & 0x60) == 0) {
                                 // no lacing
@@ -134,7 +132,7 @@ class StreamingState implements Processor {
 
                 // saving the block
                 //fragment.appendBlock(buffer, elem.getElementOffset(), elem.getElementSize());
-                fragment.appendKeyBlock(buffer, elem.getElementOffset(), elem.getElementSize(), videoKeyOffset);
+                fragment.appendKeyBlock(buffer, elem.getElementOffset(), elem.getElementSize());
 
                 //DEBUG System.out.println();
 
@@ -144,16 +142,6 @@ class StreamingState implements Processor {
 
                 // append the BlockGroup to the current fragment
                 fragment.appendBlock(buffer, elem.getElementOffset(), elem.getElementSize());
-
-                // BlockGroup element is not supported
-                //throw new RuntimeException("BlockGroup is not yet supported.");
-
-
-            } else {
-
-                // report unhandled element
-                //DEBUG System.out.println(elem);
-
             }
 
             if (elem.getId() == ID_CLUSTER || elem.getDataSize() >= 0x100000000L) {

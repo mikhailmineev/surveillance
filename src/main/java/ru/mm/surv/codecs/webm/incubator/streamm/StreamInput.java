@@ -28,7 +28,7 @@ public class StreamInput {
     private final Stream stream;
     private final InputStream input;
 
-    private final int BUFFER_SIZE = 65536;
+    private static final int BUFFER_SIZE = 65536;
 
     public StreamInput(Stream stream, InputStream input) {
         this.stream = stream;
@@ -38,19 +38,19 @@ public class StreamInput {
     public void run() throws IOException {
 
         // notification about starting the input process
-        stream.postEvent(new ServerEvent(stream, ServerEvent.INPUT_START));
+        stream.postEvent(new ServerEvent(ServerEvent.INPUT_START));
 
         Buffer buffer = new Buffer(BUFFER_SIZE);
         Feeder feeder = new Feeder(buffer, input);
 
-        HeaderDetectionState hds = new HeaderDetectionState(this, stream);
+        HeaderDetectionState hds = new HeaderDetectionState(stream);
         feeder.feedTo(hds);
 
-        StreamingState ss = new StreamingState(this, stream, hds.getVideoTrackNumber());
+        StreamingState ss = new StreamingState(stream, hds.getVideoTrackNumber());
         feeder.feedTo(ss);
 
         // notification about ending the input process
-        stream.postEvent(new ServerEvent(stream, ServerEvent.INPUT_STOP));
+        stream.postEvent(new ServerEvent(ServerEvent.INPUT_STOP));
     }
 
 }

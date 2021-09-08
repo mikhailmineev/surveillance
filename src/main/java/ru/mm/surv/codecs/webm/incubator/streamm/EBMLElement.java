@@ -2,11 +2,11 @@ package ru.mm.surv.codecs.webm.incubator.streamm;
 
 class EBMLElement {
 
-    private long id;
-    private long size;
-    private byte[] buffer;
-    private int offset;
-    private int dataOffset;
+    private final long id;
+    private final long size;
+    private final byte[] buffer;
+    private final int offset;
+    private final int dataOffset;
 
 
     protected EBMLElement(byte[] buffer, int offset, int length) {
@@ -61,21 +61,6 @@ class EBMLElement {
         return num;
     }
 
-    public static long loadEBMLUnsigned(byte[] buffer, int offset, int length) {
-
-        long sizeFlag;
-        long num;
-
-        sizeFlag = 0x80;
-        num = 0;
-        while (((num |= buffer[offset++] & 0xff) & sizeFlag) == 0 && sizeFlag != 0) {
-            num <<= 8;
-            sizeFlag <<= 7;
-        }
-
-        return num ^ sizeFlag;
-    }
-
     public long getId() {
         return id;
     }
@@ -88,7 +73,7 @@ class EBMLElement {
         if (size == 0x1ffffffffffffffL)
             return -1;
 
-        if (size >= 0x100000000l)
+        if (size >= 0x100000000L)
             throw new RuntimeException("Element too long to get array offset.");
 
         return (int)(dataOffset - offset + size);
@@ -110,7 +95,7 @@ class EBMLElement {
         if (size == 0x1ffffffffffffffL)
             return -1;
 
-        if ((dataOffset + size) >= 0x100000000l)
+        if ((dataOffset + size) >= 0x100000000L)
             throw new RuntimeException("Element too long to get array offset.");
 
         return (int)(dataOffset + size);

@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import ru.mm.surv.capture.config.InputFormat;
 import ru.mm.surv.capture.config.InputSource;
 import ru.mm.surv.capture.config.InputType;
 import ru.mm.surv.capture.config.Platform;
@@ -18,7 +19,7 @@ import static org.mockito.Mockito.mock;
 @Slf4j
 public class WebcamConfigTest {
 
-    private String outputMac = "ffmpeg version 4.4-tessus  https://evermeet.cx/ffmpeg/  Copyright (c) 2000-2021 the FFmpeg developers\n" +
+    private static final String outputMac = "ffmpeg version 4.4-tessus  https://evermeet.cx/ffmpeg/  Copyright (c) 2000-2021 the FFmpeg developers\n" +
             "  built with Apple clang version 11.0.0 (clang-1100.0.33.17)\n" +
             "  configuration: --cc=/usr/bin/clang --prefix=/opt/ffmpeg --extra-version=tessus --enable-avisynth --enable-fontconfig --enable-gpl --enable-libaom --enable-libass --enable-libbluray --enable-libdav1d --enable-libfreetype --enable-libgsm --enable-libmodplug --enable-libmp3lame --enable-libmysofa --enable-libopencore-amrnb --enable-libopencore-amrwb --enable-libopenh264 --enable-libopenjpeg --enable-libopus --enable-librubberband --enable-libshine --enable-libsnappy --enable-libsoxr --enable-libspeex --enable-libtheora --enable-libtwolame --enable-libvidstab --enable-libvmaf --enable-libvo-amrwbenc --enable-libvorbis --enable-libvpx --enable-libwebp --enable-libx264 --enable-libx265 --enable-libxavs --enable-libxvid --enable-libzimg --enable-libzmq --enable-libzvbi --enable-version3 --pkg-config-flags=--static --disable-ffplay\n" +
             "  libavutil      56. 70.100 / 56. 70.100\n" +
@@ -36,7 +37,7 @@ public class WebcamConfigTest {
             "[AVFoundation indev @ 0x7f8ff1606400] [0] Built-in Microphone\n" +
             ": Input/output error";
 
-    private String outputWin = "ffmpeg version N-103050-g69aa2488fc-20210723 Copyright (c) 2000-2021 the FFmpeg developers\n" +
+    private static final String outputWin = "ffmpeg version N-103050-g69aa2488fc-20210723 Copyright (c) 2000-2021 the FFmpeg developers\n" +
             "  built with gcc 10-win32 (GCC) 20210408\n" +
             "  configuration: --prefix=/ffbuild/prefix --pkg-config-flags=--static --pkg-config=pkg-config --cross-prefix=x86_64-w64-mingw32- --arch=x86_64 --target-os=mingw32 --enable-gpl --enable-version3 --disable-debug --disable-w32threads --enable-pthreads --enable-iconv --enable-libxml2 --enable-zlib --enable-libfreetype --enable-libfribidi --enable-gmp --enable-lzma --enable-fontconfig --enable-libvorbis --enable-opencl --enable-libvmaf --enable-vulkan --disable-libxcb --disable-xlib --enable-amf --enable-libaom --enable-avisynth --enable-libdav1d --enable-libdavs2 --disable-libfdk-aac --enable-ffnvcodec --enable-cuda-llvm --enable-libglslang --enable-libgme --enable-libass --enable-libbluray --enable-libmp3lame --enable-libopus --enable-libtheora --enable-libvpx --enable-libwebp --enable-lv2 --enable-libmfx --enable-libopencore-amrnb --enable-libopencore-amrwb --enable-libopenjpeg --enable-librav1e --enable-librubberband --enable-schannel --enable-sdl2 --enable-libsoxr --enable-libsrt --enable-libsvtav1 --enable-libtwolame --enable-libuavs3d --disable-libdrm --disable-vaapi --enable-libvidstab --enable-libx264 --enable-libx265 --enable-libxavs2 --enable-libxvid --enable-libzimg --extra-cflags=-DLIBTWOLAME_STATIC --extra-cxxflags= --extra-ldflags=-pthread --extra-ldexeflags= --extra-libs=-lgomp --extra-version=20210723\n" +
             "  libavutil      57.  1.100 / 57.  1.100\n" +
@@ -63,6 +64,65 @@ public class WebcamConfigTest {
             "[dshow @ 0000029379f12ac0]     Alternative name \"@device_cm_{33D9A762-90C8-11D0-BD43-00A0C911CE86}\\wave_{1C96D137-BCFC-4462-8470-5B2F70DA954F}\"\n" +
             "dummy: Immediate exit requested\n";
 
+    private static final String outputWinDeviceInfo = "ffmpeg version N-103179-gac0408522a-20210808 Copyright (c) 2000-2021 the FFmpeg developers\n" +
+            "  built with gcc 10-win32 (GCC) 20210408\n" +
+            "  configuration: --prefix=/ffbuild/prefix --pkg-config-flags=--static --pkg-config=pkg-config --cross-prefix=x86_64-w64-mingw32- --arch=x86_64 --target-os=mingw32 --enable-gpl --enable-version3 --disable-debug --disable-w32threads --enable-pthreads --enable-iconv --enable-libxml2 --enable-zlib --enable-libfreetype --enable-libfribidi --enable-gmp --enable-lzma --enable-fontconfig --enable-libvorbis --enable-opencl --enable-libvmaf --enable-vulkan --disable-libxcb --disable-xlib --enable-amf --enable-libaom --enable-avisynth --enable-libdav1d --enable-libdavs2 --disable-libfdk-aac --enable-ffnvcodec --enable-cuda-llvm --enable-libglslang --enable-libgme --enable-libass --enable-libbluray --enable-libmp3lame --enable-libopus --enable-libtheora --enable-libvpx --enable-libwebp --enable-lv2 --enable-libmfx --enable-libopencore-amrnb --enable-libopencore-amrwb --enable-libopenjpeg --enable-librav1e --enable-librubberband --enable-schannel --enable-sdl2 --enable-libsoxr --enable-libsrt --enable-libsvtav1 --enable-libtwolame --enable-libuavs3d --disable-libdrm --disable-vaapi --enable-libvidstab --enable-libx264 --enable-libx265 --enable-libxavs2 --enable-libxvid --enable-libzimg --extra-cflags=-DLIBTWOLAME_STATIC --extra-cxxflags= --extra-ldflags=-pthread --extra-ldexeflags= --extra-libs=-lgomp --extra-version=20210808\n" +
+            "  libavutil      57.  3.100 / 57.  3.100\n" +
+            "  libavcodec     59.  4.101 / 59.  4.101\n" +
+            "  libavformat    59.  4.101 / 59.  4.101\n" +
+            "  libavdevice    59.  0.100 / 59.  0.100\n" +
+            "  libavfilter     8.  1.103 /  8.  1.103\n" +
+            "  libswscale      6.  0.100 /  6.  0.100\n" +
+            "  libswresample   4.  0.100 /  4.  0.100\n" +
+            "  libpostproc    56.  0.100 / 56.  0.100\n" +
+            "[dshow @ 0000024dbce98680] DirectShow video device options (from video devices)\n" +
+            "[dshow @ 0000024dbce98680]  Pin \"Capture\" (alternative pin name \"0\")\n" +
+            "[dshow @ 0000024dbce98680]   vcodec=mjpeg  min s=1920x1080 fps=30 max s=1920x1080 fps=30\n" +
+            "[dshow @ 0000024dbce98680]   vcodec=mjpeg  min s=1920x1080 fps=30 max s=1920x1080 fps=30\n" +
+            "[dshow @ 0000024dbce98680]   vcodec=mjpeg  min s=1280x720 fps=30 max s=1280x720 fps=30\n" +
+            "[dshow @ 0000024dbce98680]   vcodec=mjpeg  min s=1280x720 fps=30 max s=1280x720 fps=30\n" +
+            "[dshow @ 0000024dbce98680]   vcodec=mjpeg  min s=640x480 fps=30 max s=640x480 fps=30\n" +
+            "[dshow @ 0000024dbce98680]   vcodec=mjpeg  min s=640x480 fps=30 max s=640x480 fps=30\n" +
+            "[dshow @ 0000024dbce98680]   vcodec=mjpeg  min s=544x288 fps=30 max s=544x288 fps=30\n" +
+            "[dshow @ 0000024dbce98680]   vcodec=mjpeg  min s=544x288 fps=30 max s=544x288 fps=30\n" +
+            "[dshow @ 0000024dbce98680]   vcodec=mjpeg  min s=320x240 fps=30 max s=320x240 fps=30\n" +
+            "[dshow @ 0000024dbce98680]   vcodec=mjpeg  min s=320x240 fps=30 max s=320x240 fps=30\n" +
+            "[dshow @ 0000024dbce98680]   vcodec=mjpeg  min s=432x240 fps=30 max s=432x240 fps=30\n" +
+            "[dshow @ 0000024dbce98680]   vcodec=mjpeg  min s=432x240 fps=30 max s=432x240 fps=30\n" +
+            "[dshow @ 0000024dbce98680]   vcodec=mjpeg  min s=160x120 fps=30 max s=160x120 fps=30\n" +
+            "[dshow @ 0000024dbce98680]   vcodec=mjpeg  min s=160x120 fps=30 max s=160x120 fps=30\n" +
+            "[dshow @ 0000024dbce98680]   vcodec=mjpeg  min s=800x600 fps=30 max s=800x600 fps=30\n" +
+            "[dshow @ 0000024dbce98680]   vcodec=mjpeg  min s=800x600 fps=30 max s=800x600 fps=30\n" +
+            "[dshow @ 0000024dbce98680]   vcodec=mjpeg  min s=864x480 fps=30 max s=864x480 fps=30\n" +
+            "[dshow @ 0000024dbce98680]   vcodec=mjpeg  min s=864x480 fps=30 max s=864x480 fps=30\n" +
+            "[dshow @ 0000024dbce98680]   vcodec=mjpeg  min s=960x720 fps=30 max s=960x720 fps=30\n" +
+            "[dshow @ 0000024dbce98680]   vcodec=mjpeg  min s=960x720 fps=30 max s=960x720 fps=30\n" +
+            "[dshow @ 0000024dbce98680]   vcodec=mjpeg  min s=1024x576 fps=30 max s=1024x576 fps=30\n" +
+            "[dshow @ 0000024dbce98680]   vcodec=mjpeg  min s=1024x576 fps=30 max s=1024x576 fps=30\n" +
+            "[dshow @ 0000024dbce98680]   pixel_format=yuyv422  min s=1920x1080 fps=5 max s=1920x1080 fps=5\n" +
+            "[dshow @ 0000024dbce98680]   pixel_format=yuyv422  min s=1920x1080 fps=5 max s=1920x1080 fps=5\n" +
+            "[dshow @ 0000024dbce98680]   pixel_format=yuyv422  min s=1280x720 fps=10 max s=1280x720 fps=10\n" +
+            "[dshow @ 0000024dbce98680]   pixel_format=yuyv422  min s=1280x720 fps=10 max s=1280x720 fps=10\n" +
+            "[dshow @ 0000024dbce98680]   pixel_format=yuyv422  min s=640x480 fps=30 max s=640x480 fps=30\n" +
+            "[dshow @ 0000024dbce98680]   pixel_format=yuyv422  min s=640x480 fps=30 max s=640x480 fps=30\n" +
+            "[dshow @ 0000024dbce98680]   pixel_format=yuyv422  min s=544x288 fps=30 max s=544x288 fps=30\n" +
+            "[dshow @ 0000024dbce98680]   pixel_format=yuyv422  min s=544x288 fps=30 max s=544x288 fps=30\n" +
+            "[dshow @ 0000024dbce98680]   pixel_format=yuyv422  min s=320x240 fps=30 max s=320x240 fps=30\n" +
+            "[dshow @ 0000024dbce98680]   pixel_format=yuyv422  min s=320x240 fps=30 max s=320x240 fps=30\n" +
+            "[dshow @ 0000024dbce98680]   pixel_format=yuyv422  min s=432x240 fps=30 max s=432x240 fps=30\n" +
+            "[dshow @ 0000024dbce98680]   pixel_format=yuyv422  min s=432x240 fps=30 max s=432x240 fps=30\n" +
+            "[dshow @ 0000024dbce98680]   pixel_format=yuyv422  min s=160x120 fps=30 max s=160x120 fps=30\n" +
+            "[dshow @ 0000024dbce98680]   pixel_format=yuyv422  min s=160x120 fps=30 max s=160x120 fps=30\n" +
+            "[dshow @ 0000024dbce98680]   pixel_format=yuyv422  min s=800x600 fps=20 max s=800x600 fps=20\n" +
+            "[dshow @ 0000024dbce98680]   pixel_format=yuyv422  min s=800x600 fps=20 max s=800x600 fps=20\n" +
+            "[dshow @ 0000024dbce98680]   pixel_format=yuyv422  min s=864x480 fps=20 max s=864x480 fps=20\n" +
+            "[dshow @ 0000024dbce98680]   pixel_format=yuyv422  min s=864x480 fps=20 max s=864x480 fps=20\n" +
+            "[dshow @ 0000024dbce98680]   pixel_format=yuyv422  min s=960x720 fps=12.5 max s=960x720 fps=12.5\n" +
+            "[dshow @ 0000024dbce98680]   pixel_format=yuyv422  min s=960x720 fps=12.5 max s=960x720 fps=12.5\n" +
+            "[dshow @ 0000024dbce98680]   pixel_format=yuyv422  min s=1024x576 fps=15 max s=1024x576 fps=15\n" +
+            "[dshow @ 0000024dbce98680]   pixel_format=yuyv422  min s=1024x576 fps=15 max s=1024x576 fps=15\n" +
+            "video=Genius Webcam: Immediate exit requested\n";
+
     private FfmpegInstaller ffmpegInstaller;
     private WebcamDiscovery webcamDiscovery;
 
@@ -87,6 +147,12 @@ public class WebcamConfigTest {
         assertEquals("Genius Webcam", sources.get(0).getId());
         assertEquals(InputType.VIDEO, sources.get(0).getType());
         assertEquals("Genius Webcam", sources.get(0).getName());
+    }
+
+    @Test
+    public void testParseFormatsWin() {
+        List<InputFormat> sources = webcamDiscovery.parseFormats(Platform.WIN, Arrays.asList(outputWinDeviceInfo.split("\n")));
+        log.info(sources.toString());
     }
 
 }

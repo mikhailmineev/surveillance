@@ -47,7 +47,7 @@ public class Stream extends EventSourceImpl {
 
     public synchronized void pushFragment(MovieFragment newFragment) {
         if (fragmentAge == 0)
-            postEvent(new ServerEvent(this, ServerEvent.INPUT_FIRST_FRAGMENT));
+            postEvent(new ServerEvent(ServerEvent.INPUT_FIRST_FRAGMENT));
         fragment = newFragment;
         fragmentAge++;
     }

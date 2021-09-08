@@ -31,8 +31,8 @@ import java.io.InputStream;
  */
 public class Feeder {
     
-    Buffer buffer;
-    InputStream input;
+    final Buffer buffer;
+    final InputStream input;
     
     /**
      * Constructs an object.

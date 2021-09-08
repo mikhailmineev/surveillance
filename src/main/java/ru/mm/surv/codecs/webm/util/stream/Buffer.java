@@ -22,7 +22,7 @@ package ru.mm.surv.codecs.webm.util.stream;
  */
 public class Buffer {
     
-    private byte[] data;
+    private final byte[] data;
     private int offset;
     private int length;
     

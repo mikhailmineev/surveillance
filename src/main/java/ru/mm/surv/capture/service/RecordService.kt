@@ -1,7 +1,6 @@
 package ru.mm.surv.capture.service
 
 import java.nio.file.Path
-import java.util.*
 
 interface RecordService {
     fun records(): Collection<String>

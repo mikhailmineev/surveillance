@@ -10,27 +10,32 @@ import org.springframework.web.servlet.view.RedirectView
 import org.springframework.web.bind.annotation.PostMapping
 
 @RestController
-@RequestMapping("stream/control")
+@RequestMapping("stream")
 class StreamController @Autowired constructor(private val ffmpegStream: FfmpegStream) {
 
-    @GetMapping("start")
+    @GetMapping
+    fun streams(): Collection<String> {
+        return ffmpegStream.streamNames()
+    }
+
+    @GetMapping("control/start")
     fun startUrl(@RequestHeader("Referer") referer: String): RedirectView {
         ffmpegStream.start()
         return RedirectView(referer)
     }
 
-    @PostMapping("start")
+    @PostMapping("control/start")
     fun start() {
         ffmpegStream.start()
     }
 
-    @GetMapping("stop")
+    @GetMapping("control/stop")
     fun stopUrl(@RequestHeader("Referer") referer: String): RedirectView {
         ffmpegStream.stop()
         return RedirectView(referer)
     }
 
-    @PostMapping("stop")
+    @PostMapping("control/stop")
     fun stop() {
         ffmpegStream.stop()
     }

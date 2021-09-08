@@ -15,13 +15,13 @@ public class ServerEvent extends EventImpl {
     public static final int CLIET_STOP = 1002;
     public static final int CLIET_FRAGMENT_SKIP = 1005;
 
-    private Date startDate;
+    private final Date startDate;
 
-    public ServerEvent(Object sourceStream, int type) {
-        this(sourceStream, type, null);
+    public ServerEvent(int type) {
+        this(type, null);
     }
 
-    public ServerEvent(Object sourceStream, int type, Date startDate) {
+    public ServerEvent(int type, Date startDate) {
         super(type);
         this.startDate = startDate;
     }

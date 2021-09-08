@@ -11,9 +11,7 @@ import ru.mm.surv.capture.repository.WebcamRepository
 import ru.mm.surv.capture.service.FfmpegInstaller
 import ru.mm.surv.capture.service.FfmpegStream
 import java.util.HashMap
-import ru.mm.surv.capture.config.CameraConfig
 import java.io.File
-import java.util.function.Consumer
 
 @Service
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)

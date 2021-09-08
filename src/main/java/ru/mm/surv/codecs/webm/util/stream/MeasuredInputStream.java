@@ -17,6 +17,7 @@
 
 package ru.mm.surv.codecs.webm.util.stream;
 
+import org.jetbrains.annotations.NotNull;
 import ru.mm.surv.codecs.webm.event.EventSource;
 
 import java.io.IOException;
@@ -42,7 +43,7 @@ public class MeasuredInputStream extends InputStream {
     }
 
     @Override
-    public int read(byte[] buffer, int offset, int maxLength) throws IOException {
+    public int read(@NotNull byte[] buffer, int offset, int maxLength) throws IOException {
 
         // starting time of the transfer
         long transferStart = new Date().getTime();
@@ -59,7 +60,7 @@ public class MeasuredInputStream extends InputStream {
         }
 
         // notification about the transfer
-        source.postEvent(new TransferEvent(TransferEvent.STREAM_INPUT, numBytes, new Date().getTime() - transferStart));
+        source.postEvent(new TransferEvent(TransferEvent.STREAM_INPUT));
 
         return numBytes;
     }

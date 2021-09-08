@@ -9,7 +9,6 @@ public class ServerStatusEvent extends EventImpl {
     public static final int DEFAULT_TYPE = 1;
 
     private int clientCount = -1;
-    private int clientLimit = -1;
 
     public ServerStatusEvent() {
         super(DEFAULT_TYPE, new Date());
@@ -20,10 +19,11 @@ public class ServerStatusEvent extends EventImpl {
     }
 
     public String toString() {
-        StringBuffer sb = new StringBuffer(40);
+        StringBuilder sb = new StringBuilder(40);
         sb.append("{cls:4, clientCount:");
         sb.append(clientCount);
         sb.append(", clientLimit:");
+        int clientLimit = -1;
         sb.append(clientLimit);
         sb.append(",time:");
         sb.append(getDate().getTime());

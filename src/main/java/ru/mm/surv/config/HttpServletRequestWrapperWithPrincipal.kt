@@ -23,7 +23,7 @@ class HttpServletRequestWrapperWithPrincipal(private val request: HttpServletReq
             ?.let { it as? SecurityContextImpl }
             ?.authentication
             ?.principal
-            ?.let { it as? ru.mm.surv.config.User }
+            ?.let { it as? User }
             ?.username
             ?.let(::UserPrincipal)
     }

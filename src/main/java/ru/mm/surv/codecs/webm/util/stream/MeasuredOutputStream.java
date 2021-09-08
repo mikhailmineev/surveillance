@@ -17,6 +17,7 @@
 
 package ru.mm.surv.codecs.webm.util.stream;
 
+import org.jetbrains.annotations.NotNull;
 import ru.mm.surv.codecs.webm.event.EventSource;
 import ru.mm.surv.codecs.webm.incubator.streamm.Stream;
 
@@ -38,8 +39,8 @@ public class MeasuredOutputStream extends OutputStream {
 
     private final int DEFAULT_PACKET_SIZE = 64 * 1024;
 
-    protected OutputStream base;
-    protected EventSource source;
+    protected final OutputStream base;
+    protected final EventSource source;
 
     protected int chunkSize = DEFAULT_PACKET_SIZE;
 
@@ -73,12 +74,12 @@ public class MeasuredOutputStream extends OutputStream {
     }
 
     @Override
-    public void write(byte[] buffer) throws IOException {
+    public void write(@NotNull byte[] buffer) throws IOException {
         write(buffer, 0, buffer.length);
     }
 
     @Override
-    public void write(byte[] buffer, int offset, int length) throws IOException {
+    public void write(@NotNull byte[] buffer, int offset, int length) throws IOException {
 
         while (length > 0) {
 
@@ -94,7 +95,7 @@ public class MeasuredOutputStream extends OutputStream {
             base.write(buffer, offset, fragLength);
 
             // notification about the transfer
-            source.postEvent(new TransferEvent(TransferEvent.STREAM_OUTPUT, fragLength, new Date().getTime() - transferStart));
+            source.postEvent(new TransferEvent(TransferEvent.STREAM_OUTPUT));
 
             // next packet (chunk) start
             offset += fragLength;

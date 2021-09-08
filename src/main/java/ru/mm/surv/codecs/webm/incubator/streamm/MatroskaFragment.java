@@ -21,18 +21,16 @@ import ru.mm.surv.codecs.webm.util.stream.Buffer;
 
 public class MatroskaFragment implements MovieFragment {
     
-    private final int INITIAL_CLUSTER_LENGTH = 9;
-    private final int TIMECODE_LAST_OFFSET = 18;
-    private final int CLUSTER_LENGTH_LAST_OFFSET = 8;
-    private final byte[] clusterHead = {0x1F, 0x43, (byte)0xB6, 0x75, 0x08, 00, 00, 00, 00, 
-            (byte)0xe7, (byte)0x88, 00, 00, 00, 00, 00, 00, 00, 00};
+    private static final int INITIAL_CLUSTER_LENGTH = 9;
+    private static final int TIMECODE_LAST_OFFSET = 18;
+    private static final int CLUSTER_LENGTH_LAST_OFFSET = 8;
+    private static final byte[] clusterHead = {0x1F, 0x43, (byte)0xB6, 0x75, 0x08, 0, 0, 0, 0,
+            (byte)0xe7, (byte)0x88, 0, 0, 0, 0, 0, 0, 0, 0};
 
-    private byte[] data = new byte[LIMIT_FRAME_MAXIMUM];
+    private final byte[] data = new byte[LIMIT_FRAME_MAXIMUM];
     private int dataLength = 0;
     private int clusterOffset = -1;
-    
-    private Buffer keyBuffer = null;
-    
+
     public MatroskaFragment() {
     }
     
@@ -74,15 +72,8 @@ public class MatroskaFragment implements MovieFragment {
         
         clusterOffset = -1;
     }
-    
-    public boolean hasCluster() {
-        return clusterOffset != -1;
-    }
-    
-    public void appendKeyBlock(byte[] buffer, int offset, int length, int keyframeOffset) {
-        if (keyframeOffset > 0) {
-            keyBuffer = new Buffer(data, dataLength + (keyframeOffset - offset), length - (keyframeOffset - offset));
-        }
+
+    public void appendKeyBlock(byte[] buffer, int offset, int length) {
         appendBlock(buffer, offset, length);
     }
     
@@ -96,17 +87,11 @@ public class MatroskaFragment implements MovieFragment {
     
     @Override
     public Buffer[] getBuffers() {
-        Buffer[] result = { new Buffer(data, 0, dataLength) };
-        return result;
+        return new Buffer[]{ new Buffer(data, 0, dataLength) };
     }
     
     @Override
     public int length() {
         return dataLength;
     }
-
-    public Buffer getKeyBuffer() {
-        return keyBuffer;
-    }
-    
 }

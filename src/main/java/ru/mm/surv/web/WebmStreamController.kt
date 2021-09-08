@@ -2,7 +2,6 @@ package ru.mm.surv.web
 
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.bind.annotation.RequestMapping
-import lombok.extern.slf4j.Slf4j
 import org.slf4j.LoggerFactory
 import ru.mm.surv.codecs.webm.incubator.streamm.ControlledStream
 import java.util.concurrent.ConcurrentHashMap
@@ -18,7 +17,6 @@ import javax.servlet.http.HttpServletResponse
 import org.springframework.web.bind.annotation.RequestParam
 import ru.mm.surv.codecs.webm.util.stream.MeasuredOutputStream
 import ru.mm.surv.codecs.webm.incubator.streamm.StreamClient
-import java.io.UncheckedIOException
 
 private const val MIME_TYPE_WEBM = "video/webm; codecs=\"vp8,vorbis\""
 private const val STR_CONTENT_TYPE = "Content-type"
