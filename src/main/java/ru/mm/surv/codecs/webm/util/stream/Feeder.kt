@@ -14,65 +14,46 @@
  * OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package ru.mm.surv.codecs.webm.util.stream
 
-package ru.mm.surv.codecs.webm.util.stream;
-
-
-import java.io.IOException;
-import java.io.InputStream;
+import kotlin.Throws
+import java.io.IOException
+import java.io.InputStream
 
 /**
- * A facility which feeds the data from an <code>InputStream</code> to a <code>Processor</code> until
- * the <code>Processor</code> finishes its work.
- * 
- * Since data is being red in chunks, in most cases a surplus of data is red. This <i>unprocessed<i> data
- * will be kept in the buffer after each <code>feedTo</code> is done and will be available for subsequent
+ * A facility which feeds the data from an `InputStream` to a `Processor` until
+ * the `Processor` finishes its work.
+ *
+ * Since data is being red in chunks, in most cases a surplus of data is red. This *unprocessed* data
+ * will be kept in the buffer after each `feedTo` is done and will be available for subsequent
  * calls.
- */
-public class Feeder {
-    
-    final Buffer buffer;
-    final InputStream input;
-    
+ ** */
+class Feeder(val buffer: Buffer, private val input: InputStream) {
     /**
-     * Constructs an object.
+     * Feeds the input to a `Processor` until it finishes its work.
      */
-    public Feeder(Buffer buffer, InputStream input) {
-        this.buffer = buffer;
-        this.input = input;
-    }
-    
-    /**
-     * Feeds the input to a <code>Processor</code> until it finishes its work.
-     */
-    public void feedTo(Processor processor) throws IOException {
-        byte[] data = buffer.getData();
-        
+    fun feedTo(processor: Processor) {
+        val data = buffer.data
         do {
-            
-            if (buffer.getLength() > 0) {
+            if (buffer.length > 0) {
                 // processing current payload and signalling the buffer that the processed data can be discarded
-                int bytesProcessed = processor.process(data, buffer.getOffset(), buffer.getLength());
-                buffer.markProcessed(bytesProcessed);
+                val bytesProcessed = processor.process(data, buffer.offset, buffer.length)
+                buffer.markProcessed(bytesProcessed)
             }
-            
             if (processor.finished()) {
-                return;
+                return
             }
-        
+
             // compacting buffer (moving payload to the start of the buffer) to maximize space for input data
-            buffer.compact();
-            
+            buffer.compact()
+
             // reading new data and notifying buffer about the new content
-            int length = buffer.getLength();
-            int bytes = input.read(data, length, data.length - length);
+            val length = buffer.length
+            val bytes = input.read(data, length, data.size - length)
 
             // no more data to read
-            if (bytes == -1)
-                return;
-
-            buffer.markAppended(bytes);
-
-        } while (true);
+            if (bytes == -1) return
+            buffer.markAppended(bytes)
+        } while (true)
     }
 }

@@ -52,7 +52,7 @@ class WebmStreamController {
         // this thread is working (will be blocked) while the stream is being published
         try {
             streamInput.run()
-        } catch (e: IOException) {
+        } catch (e: Exception) {
             log.warn("Stream stopped: {}", e.message)
         }
         /*

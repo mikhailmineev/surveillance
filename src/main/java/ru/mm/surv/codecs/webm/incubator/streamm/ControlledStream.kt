@@ -1,31 +1,25 @@
-package ru.mm.surv.codecs.webm.incubator.streamm;
+package ru.mm.surv.codecs.webm.incubator.streamm
 
-public class ControlledStream extends Stream {
+class ControlledStream(private val maxClients: Int) : Stream() {
+    private var numClients = 0
 
-    private final int maxClients;
-    private int numClients;
-
-    public ControlledStream(int maxClients) {
-        this.maxClients = maxClients;
-    }
-
-    public boolean subscribe(boolean force) {
+    fun subscribe(force: Boolean): Boolean {
         if (force || numClients < maxClients) {
-            numClients++;
-            refresStatus();
-            return true;
+            numClients++
+            refreshStatus()
+            return true
         }
-        return false;
+        return false
     }
 
-    public void unsubscribe() {
-        numClients--;
-        refresStatus();
+    fun unsubscribe() {
+        numClients--
+        refreshStatus()
     }
 
-    protected void refresStatus() {
-        ServerStatusEvent event = new ServerStatusEvent();
-        event.setClientCount(numClients);
-        postEvent(event);
+    private fun refreshStatus() {
+        val event = ServerStatusEvent()
+        event.setClientCount(numClients)
+        postEvent(event)
     }
 }
