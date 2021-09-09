@@ -65,7 +65,6 @@ class WebmStreamController {
     @GetMapping(value = ["{streamId}/stream.webm"], produces = [MIME_TYPE_WEBM])
     fun consume(
         @PathVariable streamId: String, response: HttpServletResponse,
-        @RequestParam(name = "sendHeader", defaultValue = "true") sendHeaderParam: String,
         @RequestParam(name = "fragmentSequence", defaultValue = "-1") fragmentSequenceParam: String,
         @RequestParam(name = "singleFragment", defaultValue = "false") singleFragmentParam: String
     ) {
@@ -79,7 +78,6 @@ class WebmStreamController {
         response.addHeader(STR_CONTENT_TYPE, stream.mimeType)
 
         // request GET parameters
-        val sendHeader = !("0" == sendHeaderParam || "false" == sendHeaderParam)
         val fragmentSequence = fragmentSequenceParam.toInt(10)
         val singleFragment = !("0" == singleFragmentParam || "false" == singleFragmentParam)
 
@@ -103,9 +101,6 @@ class WebmStreamController {
 
         // create a client
         val client = StreamClient(stream, mos)
-
-        // whether to send header
-        client.setSendHeader(sendHeader)
 
         // start output with the requested fragment
         if (fragmentSequence > 0) {

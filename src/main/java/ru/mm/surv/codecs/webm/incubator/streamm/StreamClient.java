@@ -2,6 +2,7 @@ package ru.mm.surv.codecs.webm.incubator.streamm;
 
 import ru.mm.surv.codecs.webm.util.stream.Buffer;
 
+import java.io.IOException;
 import java.io.OutputStream;
 
 public class StreamClient {
@@ -10,8 +11,6 @@ public class StreamClient {
     private final OutputStream output;
 
     private boolean runs = true;
-
-    private boolean sendHeader = true;
 
     private int requestedFragmentSequence = -1;
 
@@ -23,11 +22,6 @@ public class StreamClient {
         this.output = output;
     }
 
-
-    public void setSendHeader(boolean sendHeader) {
-        this.sendHeader = sendHeader;
-    }
-
     public void setRequestedFragmentSequence(int requestedFragmentSequence) {
         this.requestedFragmentSequence = requestedFragmentSequence;
     }
@@ -37,22 +31,20 @@ public class StreamClient {
     }
 
 
-    public void run() {
+    public void run() throws InterruptedException, IOException {
 
-        // report the starting of this client
-        stream.postEvent(new ServerEvent(ServerEvent.CLIET_START));
-
-        if (sendHeader) {
+        try {
+            // report the starting of this client
+            stream.postEvent(new ServerEvent(ServerEvent.CLIET_START));
 
             // waiting for header
-            byte[] header = stream.getHeader();
-            while (header == null && stream.isRunning()) {
-
-                // sleeping 200 ms
-                try {
-                    Thread.sleep(200);
-                } catch (Exception e) {
+            byte[] header = null;
+            while (header == null) {
+                if (stream.isRunning()) {
+                    return;
                 }
+
+                Thread.sleep(200);
 
                 header = stream.getHeader();
             }
@@ -64,84 +56,71 @@ public class StreamClient {
                 throw new RuntimeException(e);
             }
 
-
             /* Web browsers may try to detect some features of the server and open
              * multiple connections. They may close the connection eventually so
              * we wait for a little bit to ensure this request is serious. (And the
              * client needs more than just the header).
              */
 
-            // sleeping 1000 ms
-            try {
-                Thread.sleep(1000);
-            } catch (Exception e) {
-            }
+            Thread.sleep(1000);
 
-        }
+            // sending fragments
+            int nextSequence = requestedFragmentSequence;
+            while (runs && stream.isRunning()) {
 
-        // sending fragments
-        int nextSequence = requestedFragmentSequence;
-        while (runs && stream.isRunning()) {
+                boolean fragmentSent = false;
 
-            boolean fragmentSent = false;
+                // while there is a new fragment is available
+                int streamAge;
+                while (runs
+                        && stream.isRunning()
+                        && nextSequence <= (streamAge = stream.getFragmentAge())) {
 
-            // while there is a new fragment is available
-            int streamAge;
-            while (runs
-                    && stream.isRunning()
-                    && nextSequence <= (streamAge = stream.getFragmentAge())) {
+                    // notification if a fragment was skipped
+                    if (nextSequence > 0 && streamAge - nextSequence > 1)
+                        stream.postEvent(new ServerEvent(ServerEvent.CLIET_FRAGMENT_SKIP));
 
-                // notification if a fragment was skipped
-                if (nextSequence > 0 && streamAge - nextSequence > 1)
-                    stream.postEvent(new ServerEvent(ServerEvent.CLIET_FRAGMENT_SKIP));
+                    nextSequence = streamAge + 1;
 
-                nextSequence = streamAge + 1;
+                    // getting current movie fragment
+                    MovieFragment fragment = stream.getFragment();
 
-                // getting current movie fragment
-                MovieFragment fragment = stream.getFragment();
+                    // send the fragment data to the client
+                    try {
 
-                // send the fragment data to the client
-                try {
+                        Buffer[] buffers = fragment.getBuffers();
+                        for (Buffer buffer : buffers) {
 
-                    Buffer[] buffers = fragment.getBuffers();
-                    for (Buffer buffer : buffers) {
+                            // writing data packet
+                            output.write(buffer.getData(), buffer.getOffset(), buffer.getLength());
 
-                        // writing data packet
-                        output.write(buffer.getData(), buffer.getOffset(), buffer.getLength());
+                        }
 
-                    }
+                        fragmentSent = true;
 
-                    fragmentSent = true;
+                        // only one fragment requested:
+                        if (sendSingleFragment) {
+                            runs = false;
+                        }
 
-                    // only one fragment requested:
-                    if (sendSingleFragment) {
+                    } catch (Exception e) {
+
+                        // closed connection
                         runs = false;
                     }
-
-                } catch (Exception e) {
-
-                    // closed connection
-                    runs = false;
                 }
-            }
 
-            // currently no new fragment, sleeping 200 ms
-            if (!fragmentSent) {
-                try {
+                // currently no new fragment, sleeping 200 ms
+                if (!fragmentSent) {
                     Thread.sleep(200);
-                } catch (Exception e) {
                 }
+
             }
 
-        }
-
-        // report the stopping of thes client
-        stream.postEvent(new ServerEvent(ServerEvent.CLIET_STOP));
-
-        try {
+            // report the stopping of thes client
+            stream.postEvent(new ServerEvent(ServerEvent.CLIET_STOP));
+        } finally {
             output.close();
-        } catch (Exception e) {
-            e.printStackTrace();
         }
     }
 

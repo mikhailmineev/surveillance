@@ -1,54 +1,34 @@
-package ru.mm.surv.codecs.webm.incubator.streamm;
+package ru.mm.surv.codecs.webm.incubator.streamm
 
-import ru.mm.surv.codecs.webm.event.EventSourceImpl;
+import ru.mm.surv.codecs.webm.event.EventSourceImpl
 
-public class Stream extends EventSourceImpl {
+open class Stream : EventSourceImpl() {
+    @get:Synchronized
+    var fragment: MovieFragment? = null
+        private set
 
-    private MovieFragment fragment;
-    private int fragmentAge;
+    @get:Synchronized
+    var fragmentAge = 0
+        private set
 
-    private byte[] header = new byte[]{};
+    @get:Synchronized
+    @set:Synchronized
+    var header: ByteArray? = null
+    var mimeType = "application/octet-stream"
 
-    private String mimeType = "application/octet-stream";
+    @get:Synchronized
+    var isRunning = true
+        private set
 
-    private boolean runs = true;
-
-    public synchronized boolean isRunning() {
-        return runs;
+    @Synchronized
+    fun stop() {
+        isRunning = false
     }
 
-    public synchronized void stop() {
-        runs = false;
-    }
-
-    public synchronized int getFragmentAge() {
-        return fragmentAge;
-    }
-
-    public synchronized MovieFragment getFragment() {
-        return fragment;
-    }
-
-    public synchronized byte[] getHeader() {
-        return header;
-    }
-
-    public synchronized void setHeader(byte[] newHeader) {
-        header = newHeader;
-    }
-
-    public String getMimeType() {
-        return mimeType;
-    }
-
-    public void setMimeType(String mimeType) {
-        this.mimeType = mimeType;
-    }
-
-    public synchronized void pushFragment(MovieFragment newFragment) {
-        if (fragmentAge == 0)
-            postEvent(new ServerEvent(ServerEvent.INPUT_FIRST_FRAGMENT));
-        fragment = newFragment;
-        fragmentAge++;
+    @Synchronized
+    fun pushFragment(newFragment: MovieFragment?) {
+        if (fragmentAge == 0) postEvent(ServerEvent(ServerEvent.INPUT_FIRST_FRAGMENT))
+        fragment = newFragment
+        fragmentAge++
     }
 }

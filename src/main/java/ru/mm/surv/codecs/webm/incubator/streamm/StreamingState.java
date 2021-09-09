@@ -72,11 +72,6 @@ class StreamingState implements Processor {
                     throw new RuntimeException("Track numbers > 127 are not implemented.");
                 trackNum ^= 0x80;
 
-                //DEBUG System.out.print(trackNum + " ");
-
-                // the offset of a video keyframe or -1
-                int videoKeyOffset = -1;
-
                 // check if this is a video frame
                 if (trackNum == videoTrackNumber) {
                     //DEBUG System.out.print("video ");
@@ -103,10 +98,7 @@ class StreamingState implements Processor {
                             // notification about starting the input process
                             stream.postEvent(new ServerEvent(ServerEvent.INPUT_FRAGMENT_START));
 
-                            if ((flags & 0x60) == 0) {
-                                // no lacing
-                                videoKeyOffset = elem.getDataOffset() + 4;
-                            } else {
+                            if ((flags & 0x60) != 0) {
                                 throw new RuntimeException("Lacing is not yet supported.");
                             }
                         }
@@ -114,13 +106,7 @@ class StreamingState implements Processor {
                 }
 
                 // saving the block
-                //fragment.appendBlock(buffer, elem.getElementOffset(), elem.getElementSize());
                 fragment.appendKeyBlock(buffer, elem.getElementOffset(), elem.getElementSize());
-
-                //DEBUG System.out.println();
-
-                // end: ID_SIMPLEBLOCK
-
             } else if (elem.getId() == ID_BLOCKGROUP) {
 
                 // append the BlockGroup to the current fragment
