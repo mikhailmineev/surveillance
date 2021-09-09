@@ -1,13 +1,10 @@
-package ru.mm.surv.codecs.webm.util.stream;
+package ru.mm.surv.codecs.webm.util.stream
 
-import ru.mm.surv.codecs.webm.event.EventImpl;
+import ru.mm.surv.codecs.webm.event.EventImpl
 
-public class TransferEvent extends EventImpl {
-
-    public static final int STREAM_INPUT = 1;
-    public static final int STREAM_OUTPUT = 2;
-
-    public TransferEvent(int type) {
-        super(type);
+class TransferEvent(type: Int) : EventImpl(type) {
+    companion object {
+        const val STREAM_INPUT = 1
+        const val STREAM_OUTPUT = 2
     }
 }

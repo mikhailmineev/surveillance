@@ -1,97 +1,69 @@
-/*
- * Copyright 2018 Bence Varga
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
- * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS
- * OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
+package ru.mm.surv.codecs.webm.incubator.streamm
 
-package ru.mm.surv.codecs.webm.incubator.streamm;
+import ru.mm.surv.codecs.webm.util.stream.Buffer
+import java.lang.RuntimeException
 
-import ru.mm.surv.codecs.webm.util.stream.Buffer;
+class MatroskaFragment : MovieFragment {
+    private val data = ByteArray(MovieFragment.LIMIT_FRAME_MAXIMUM)
 
-public class MatroskaFragment implements MovieFragment {
-    
-    private static final int INITIAL_CLUSTER_LENGTH = 9;
-    private static final int TIMECODE_LAST_OFFSET = 18;
-    private static final int CLUSTER_LENGTH_LAST_OFFSET = 8;
-    private static final byte[] clusterHead = {0x1F, 0x43, (byte)0xB6, 0x75, 0x08, 0, 0, 0, 0,
-            (byte)0xe7, (byte)0x88, 0, 0, 0, 0, 0, 0, 0, 0};
+    private var dataLength = 0
+    private var clusterOffset = -1
 
-    private final byte[] data = new byte[LIMIT_FRAME_MAXIMUM];
-    private int dataLength = 0;
-    private int clusterOffset = -1;
+    fun openCluster(timeCode: Long) {
+        if (clusterOffset != -1) closeCluster()
+        System.arraycopy(clusterHead, 0, data, dataLength, clusterHead.size)
+        clusterOffset = dataLength
+        dataLength += clusterHead.size
 
-    public MatroskaFragment() {
-    }
-    
-    public void openCluster(long timeCode) {
-
-        if (clusterOffset != -1)
-            closeCluster();
-        
-        System.arraycopy(clusterHead, 0, data, dataLength, clusterHead.length);
-        clusterOffset = dataLength;
-        dataLength += clusterHead.length;
-        
         // saving timeCode
-        int offset = clusterOffset + TIMECODE_LAST_OFFSET;
-        long num;
-        num = timeCode;
+        var offset = clusterOffset + TIMECODE_LAST_OFFSET
+        var num: Long
+        num = timeCode
         while (num > 0) {
-            data[offset--] = (byte)num;
-            num >>= 8;
+            data[offset--] = num.toByte()
+            num = num shr 8
         }
-    }
-    
-    public void closeCluster() {
-        
-        if (clusterOffset == -1)
-            throw new RuntimeException("No open cluster.");
-        
-        // cluster length (including initial TimeCode element)
-        int clusterLength = dataLength - clusterOffset - INITIAL_CLUSTER_LENGTH;
-        
-        // saving cluster length to the EBML element's header
-        int offset = clusterOffset + CLUSTER_LENGTH_LAST_OFFSET;
-        int num;
-        num = clusterLength;
-        while (num > 0) {
-            data[offset--] = (byte)num;
-            num >>= 8;
-        }
-        
-        clusterOffset = -1;
     }
 
-    public void appendKeyBlock(byte[] buffer, int offset, int length) {
-        appendBlock(buffer, offset, length);
+    fun closeCluster() {
+        if (clusterOffset == -1) throw RuntimeException("No open cluster.")
+
+        // cluster length (including initial TimeCode element)
+        val clusterLength = dataLength - clusterOffset - INITIAL_CLUSTER_LENGTH
+
+        // saving cluster length to the EBML element's header
+        var offset = clusterOffset + CLUSTER_LENGTH_LAST_OFFSET
+        var num = clusterLength
+        while (num > 0) {
+            data[offset--] = num.toByte()
+            num = num shr 8
+        }
+        clusterOffset = -1
     }
-    
-    public void appendBlock(byte[] buffer, int offset, int length) {
-        if (data.length < dataLength + length)
-            throw new RuntimeException("Buffer full");
-        
-        System.arraycopy(buffer, offset, data, dataLength, length);
-        dataLength += length;
+
+    fun appendKeyBlock(buffer: ByteArray, offset: Int, length: Int) {
+        appendBlock(buffer, offset, length)
     }
-    
-    @Override
-    public Buffer[] getBuffers() {
-        return new Buffer[]{ new Buffer(data, 0, dataLength) };
+
+    fun appendBlock(buffer: ByteArray, offset: Int, length: Int) {
+        if (data.size < dataLength + length) throw RuntimeException("Buffer full")
+        System.arraycopy(buffer, offset, data, dataLength, length)
+        dataLength += length
     }
-    
-    @Override
-    public int length() {
-        return dataLength;
+
+    override fun getBuffers(): Array<Buffer> {
+        return arrayOf(Buffer(data, 0, dataLength))
+    }
+
+    override fun length(): Int {
+        return dataLength
+    }
+
+    companion object {
+        private const val INITIAL_CLUSTER_LENGTH = 9
+        private const val TIMECODE_LAST_OFFSET = 18
+        private const val CLUSTER_LENGTH_LAST_OFFSET = 8
+        private val clusterHead = byteArrayOf(0x1F, 0x43, 0xB6.toByte(), 0x75, 0x08, 0, 0, 0, 0,
+                0xe7.toByte(), 0x88.toByte(), 0, 0, 0, 0, 0, 0, 0, 0)
     }
 }

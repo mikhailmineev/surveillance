@@ -7,7 +7,7 @@ public class Stream extends EventSourceImpl {
     private MovieFragment fragment;
     private int fragmentAge;
 
-    private byte[] header;
+    private byte[] header = new byte[]{};
 
     private String mimeType = "application/octet-stream";
 

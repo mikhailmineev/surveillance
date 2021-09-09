@@ -19,7 +19,7 @@ class ControlledStream(private val maxClients: Int) : Stream() {
 
     private fun refreshStatus() {
         val event = ServerStatusEvent()
-        event.setClientCount(numClients)
+        event.clientCount = numClients
         postEvent(event)
     }
 }
