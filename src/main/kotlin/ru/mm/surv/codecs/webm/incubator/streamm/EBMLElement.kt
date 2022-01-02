@@ -1,107 +1,88 @@
-package ru.mm.surv.codecs.webm.incubator.streamm;
+package ru.mm.surv.codecs.webm.incubator.streamm
 
-class EBMLElement {
+class EBMLElement(
+    private val buffer: ByteArray,
+    elementOffsetTemp: Int,
+    length: Int,
+) {
+    val id: Long
+    val elementOffset: Int
+    val dataSize: Long
+    val dataOffset: Int
 
-    private final long id;
-    private final long size;
-    private final byte[] buffer;
-    private final int offset;
-    private final int dataOffset;
-
-
-    protected EBMLElement(byte[] buffer, int offset, int length) {
-
+    init {
+        var elementOffsetTemp = elementOffsetTemp
         if (length < 2) {
-            throw new RuntimeException("Partial header (buffered sample too small).");
+            throw RuntimeException("Partial header (buffered sample too small).")
         }
-
-        this.buffer = buffer;
-        this.offset = offset;
-
-        int limit = offset + length;
-
-        long sizeFlag;
-        long num;
-
-        sizeFlag = 0x80;
-        num = 0;
-        while (((num |= buffer[offset++] & 0xff) & sizeFlag) == 0 && sizeFlag != 0) {
-            if (offset >= limit) {
-                throw new RuntimeException("Partial header (buffered sample too small).");
+        val limit = elementOffsetTemp + length
+        var sizeFlag = 0x80L
+        var num = 0L
+        while ((run {
+                num = num or buffer[elementOffsetTemp++].toLong() and 0xff
+                num
+            } and sizeFlag) == 0L && sizeFlag != 0L) {
+            if (elementOffsetTemp >= limit) {
+                throw RuntimeException("Partial header (buffered sample too small).")
             }
-            num <<= 8;
-            sizeFlag <<= 7;
+            num = num shl 8
+            sizeFlag = sizeFlag shl 7
         }
-
-        id = num;
-
-        sizeFlag = 0x80;
-        num = 0;
-        while (((num |= buffer[offset++] & 0xff) & sizeFlag) == 0 && sizeFlag != 0) {
-            if (offset >= limit) {
-                throw new RuntimeException("Partial header (buffered sample too small).");
+        id = num
+        sizeFlag = 0x80
+        num = 0
+        while ((run {
+                num = num or buffer[elementOffsetTemp++].toLong() and 0xff
+                num
+            } and sizeFlag) == 0L && sizeFlag != 0L) {
+            if (elementOffsetTemp >= limit) {
+                throw RuntimeException("Partial header (buffered sample too small).")
             }
-            num <<= 8;
-            sizeFlag <<= 7;
+            num = num shl 8
+            sizeFlag = sizeFlag shl 7
         }
-
-        size = num ^ sizeFlag;
-
-        dataOffset = offset;
+        dataSize = num or sizeFlag
+        dataOffset = elementOffsetTemp
+        elementOffset = elementOffsetTemp
     }
 
-    public static long loadUnsigned(byte[] buffer, int offset, int length) {
-        long num = 0;
-        while (length > 0) {
-            length--;
-            num <<=8;
-            num |= buffer[offset++] & 0xff;
+    fun getElementSize(): Int {
+        if (dataSize == 0x1ffffffffffffffL)
+            return -1
+
+        if (dataSize >= 0x100000000L)
+            throw RuntimeException("Element too long to get array offset.")
+
+        return (dataOffset - elementOffset + dataSize).toInt()
+    }
+
+    fun getEndOffset(): Int {
+        if (dataSize == 0x1ffffffffffffffL)
+            return -1
+
+        if ((dataOffset + dataSize) >= 0x100000000L)
+            throw RuntimeException("Element too long to get array offset.")
+
+        return (dataOffset + dataSize).toInt()
+    }
+
+    override fun toString(): String {
+        return "EBMLElement ID:0x ${id.toString(16)} size: $dataSize"
+    }
+
+    companion object {
+        @JvmStatic
+        fun loadUnsigned(buffer: ByteArray, offset1: Int, length1: Int): Long {
+            var offset = offset1
+            var length = length1
+            var num = 0L
+            while (length > 0) {
+                length--
+                num = num shl 8
+                num = num or buffer[offset++].toLong() and 0xff
+            }
+
+            return num
         }
-
-        return num;
-    }
-
-    public long getId() {
-        return id;
-    }
-
-    public long getDataSize() {
-        return size;
-    }
-
-    public int getElementSize() {
-        if (size == 0x1ffffffffffffffL)
-            return -1;
-
-        if (size >= 0x100000000L)
-            throw new RuntimeException("Element too long to get array offset.");
-
-        return (int)(dataOffset - offset + size);
-    }
-
-    public byte[] getBuffer() {
-        return buffer;
-    }
-
-    public int getElementOffset() {
-        return offset;
-    }
-
-    public int getDataOffset() {
-        return dataOffset;
-    }
-
-    public int getEndOffset() {
-        if (size == 0x1ffffffffffffffL)
-            return -1;
-
-        if ((dataOffset + size) >= 0x100000000L)
-            throw new RuntimeException("Element too long to get array offset.");
-
-        return (int)(dataOffset + size);
-    }
-
-    public String toString() {
-        return "EBMLElement ID:0x" + Long.toHexString(id) + " size: " + size;
     }
 }

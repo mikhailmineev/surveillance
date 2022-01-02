@@ -1,43 +1,28 @@
-package ru.mm.surv.codecs.webm.incubator.streamm;
+package ru.mm.surv.codecs.webm.incubator.streamm
 
-import ru.mm.surv.codecs.webm.util.stream.Processor;
+import ru.mm.surv.codecs.webm.incubator.streamm.EBMLElement.Companion.loadUnsigned
+import java.lang.RuntimeException
+import ru.mm.surv.codecs.webm.util.stream.Processor
 
-class StreamingState implements Processor {
+internal class StreamingState(
+    private val stream: Stream,
+    private val videoTrackNumber: Long,
+) : Processor {
+    private var clusterTimeCode: Long = 0
+    private var fragment: MatroskaFragment
 
-    private static final long ID_CLUSTER = 0x1F43B675;
-    private static final long ID_SIMPLEBLOCK = 0xA3;
-    private static final long ID_BLOCKGROUP = 0xA0;
-    private static final long ID_TIMECODE = 0xE7;
-
-    private long clusterTimeCode = 0;
-
-    private final Stream stream;
-    private final long videoTrackNumber;
-
-    private MatroskaFragment fragment;
-
-    public StreamingState(Stream stream, long videoTrackNumber) {
-        this.stream = stream;
-        this.videoTrackNumber = videoTrackNumber;
-        fragment = new MatroskaFragment();
-    }
-
-    @Override
-    public int process(byte[] buffer, int offset, int length) {
-
-        int endOffset = offset + length;
-        int startOffset = offset;
-
-        EBMLElement elem;
-
+    override fun process(buffer: ByteArray, offset: Int, length: Int): Int {
+        var offset = offset
+        val endOffset = offset + length
+        val startOffset = offset
+        var elem: EBMLElement
         while (offset < endOffset - 12) {
-            elem = new EBMLElement(buffer, offset, length);
+            elem = EBMLElement(buffer, offset, length)
 
             // clusters do not need to be fully loaded, so that is an exception
             /* Note: cluster check was moved to be the first because of the
              * possibility of infinite clusters (gstreamer's curlsink?).
-             */
-            if (elem.getId() != ID_CLUSTER && elem.getEndOffset() > endOffset) {
+             */if (elem.id != ID_CLUSTER && elem.getEndOffset() > endOffset) {
 
                 /* The element is not fully loaded: we need more data, so we end
                  * this processing cycle. The StreamInput will fill the buffer
@@ -46,86 +31,88 @@ class StreamingState implements Processor {
                  * keep the data beyound this offset and the next processing cycle
                  * will begin with this element.
                  */
-                return elem.getElementOffset() - startOffset;
+                return elem.elementOffset - startOffset
             }
 
             /* Timecode for this cluster. We use a flat processing model (we do
              * not care about the nesting of elements), so this timecode will
              * live until we get the next one. It will be the Timecode element
              * of the next Cluster (according to standard).
-             */
-            if (elem.getId() == ID_TIMECODE) {
+             */if (elem.id == ID_TIMECODE) {
 
                 // we have the timecode, so open a new cluster in our movie fragment
-                clusterTimeCode = EBMLElement.loadUnsigned(buffer, elem.getDataOffset(), (int)elem.getDataSize());
+                clusterTimeCode = loadUnsigned(buffer, elem.dataOffset, elem.dataSize.toInt())
                 //System.out.println("tc: " + clusterTimeCode);
 
                 // cluster opened
-                fragment.openCluster(clusterTimeCode);
-
-            } else if (elem.getId() == ID_SIMPLEBLOCK) {
+                fragment.openCluster(clusterTimeCode)
+            } else if (elem.id == ID_SIMPLEBLOCK) {
 
                 // sample (video or audio) recieved
-
-                int trackNum = buffer[elem.getDataOffset()] & 0xff;
-                if ((trackNum & 0x80) == 0)
-                    throw new RuntimeException("Track numbers > 127 are not implemented.");
-                trackNum ^= 0x80;
+                var trackNum: Int = buffer[elem.dataOffset].toInt() and 0xff
+                if (trackNum and 0x80 == 0) throw RuntimeException("Track numbers > 127 are not implemented.")
+                trackNum = trackNum xor 0x80
 
                 // check if this is a video frame
-                if (trackNum == videoTrackNumber) {
+                if (trackNum.toLong() == videoTrackNumber) {
                     //DEBUG System.out.print("video ");
-
-                    int flags = buffer[elem.getDataOffset() + 3] & 0xff;
-                    if ((flags & 0x80) != 0) {
+                    val flags: Int = buffer[elem.dataOffset + 3].toInt() and 0xff
+                    if (flags and 0x80 != 0) {
                         // keyframe
 
                         //DEBUG System.out.print("key ");
                         if (fragment.length() >= MovieFragment.LIMIT_FRAME_MINIMUM) {
 
                             // closing current cluster (of the curent fragment)
-                            fragment.closeCluster();
+                            fragment.closeCluster()
 
                             // send the complete fragment to the stream coordinator
-                            stream.pushFragment(fragment);
+                            stream.pushFragment(fragment)
 
                             // create a new fragment
-                            fragment = new MatroskaFragment();
+                            fragment = MatroskaFragment()
 
                             // set up new fragment's timecode
-                            fragment.openCluster(clusterTimeCode);
+                            fragment.openCluster(clusterTimeCode)
 
                             // notification about starting the input process
-                            stream.postEvent(new ServerEvent(ServerEvent.INPUT_FRAGMENT_START));
-
-                            if ((flags & 0x60) != 0) {
-                                throw new RuntimeException("Lacing is not yet supported.");
+                            stream.postEvent(ServerEvent(ServerEvent.INPUT_FRAGMENT_START))
+                            if (flags and 0x60 != 0) {
+                                throw RuntimeException("Lacing is not yet supported.")
                             }
                         }
                     }
                 }
 
                 // saving the block
-                fragment.appendKeyBlock(buffer, elem.getElementOffset(), elem.getElementSize());
-            } else if (elem.getId() == ID_BLOCKGROUP) {
+                fragment.appendKeyBlock(buffer, elem.elementOffset, elem.getElementSize())
+            } else if (elem.id == ID_BLOCKGROUP) {
 
                 // append the BlockGroup to the current fragment
-                fragment.appendBlock(buffer, elem.getElementOffset(), elem.getElementSize());
+                fragment.appendBlock(buffer, elem.elementOffset, elem.getElementSize())
             }
-
-            if (elem.getId() == ID_CLUSTER || elem.getDataSize() >= 0x100000000L) {
-                offset = elem.getDataOffset();
-            } else {
-                offset = elem.getEndOffset();
-            }
+            offset =
+                if (elem.id == ID_CLUSTER || elem.dataSize >= 0x100000000L) {
+                    elem.dataOffset
+                } else {
+                    elem.getEndOffset()
+                }
         }
-
-        return offset - startOffset;
+        return offset - startOffset
     }
 
-    @Override
-    public boolean finished() {
-        return false;
+    override fun finished(): Boolean {
+        return false
     }
 
+    companion object {
+        private const val ID_CLUSTER: Long = 0x1F43B675
+        private const val ID_SIMPLEBLOCK: Long = 0xA3
+        private const val ID_BLOCKGROUP: Long = 0xA0
+        private const val ID_TIMECODE: Long = 0xE7
+    }
+
+    init {
+        fragment = MatroskaFragment()
+    }
 }

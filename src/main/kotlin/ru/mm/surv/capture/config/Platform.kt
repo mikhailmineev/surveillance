@@ -24,14 +24,10 @@ enum class Platform(
         "{0}:{1}",
         "avfoundation",
         "AVFoundation",
-        Consumer { path: Path? ->
-            try {
-                val perms = Files.getPosixFilePermissions(path)
-                perms.add(PosixFilePermission.OWNER_EXECUTE)
-                Files.setPosixFilePermissions(path, perms)
-            } catch (e: IOException) {
-                throw UncheckedIOException(e)
-            }
+        {
+            val perms = Files.getPosixFilePermissions(it)
+            perms.add(PosixFilePermission.OWNER_EXECUTE)
+            Files.setPosixFilePermissions(it, perms)
         },
         InputSourceFactory::fromMacLine
     ),
@@ -40,7 +36,7 @@ enum class Platform(
         "video={0}:audio={1}",
         "dshow",
         "DirectShow",
-        Consumer { path: Path? -> },
+        { },
         InputSourceFactory::fromWinLine
     );
 

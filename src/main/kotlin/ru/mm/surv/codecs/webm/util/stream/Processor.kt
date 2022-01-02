@@ -20,5 +20,5 @@ interface Processor {
      * @param length The number of data bytes need to be processed.
      * @return Number of bytes successfully processed.
      */
-    fun process(buffer: ByteArray?, offset: Int, length: Int): Int
+    fun process(buffer: ByteArray, offset: Int, length: Int): Int
 }

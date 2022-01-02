@@ -2,7 +2,6 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.springframework.boot.gradle.tasks.bundling.BootJar
 
 plugins {
-    java
     id("org.springframework.boot") version "2.5.3"
     id("io.spring.dependency-management") version "1.0.11.RELEASE"
     id("io.freefair.lombok") version "6.1.0-m3"
@@ -48,10 +47,10 @@ sourceSets {
 tasks.withType<ProcessResources> {
     ant.withGroovyBuilder {
         "mkdir"("dir" to "build/ffmpeg/win")
-        "get"("src" to "https://github.com/BtbN/FFmpeg-Builds/releases/download/${project.extra["ffmpegBuildTag"]}/${project.extra["ffmpegVersion"]}.zip", "dest" to "build/ffmpeg/win/ffmpeg.zip", "skipexisting" to "true")
+        "get"("src" to "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip", "dest" to "build/ffmpeg/win/ffmpeg.zip", "skipexisting" to "true")
         "unzip"("src" to "build/ffmpeg/win/ffmpeg.zip", "dest" to "build/ffmpeg/win/")
         "copy"("tofile" to "build/resources/bin/ffmpeg/win/ffmpeg.exe") {
-            "fileset"("file" to "build/ffmpeg/win/${project.extra["ffmpegVersion"]}/bin/ffmpeg.exe")
+            "fileset"("file" to "build/ffmpeg/win/ffmpeg-master-latest-win64-gpl/bin/ffmpeg.exe")
         }
     }
 
