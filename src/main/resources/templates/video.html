@@ -20,7 +20,7 @@
 <div class="container">
     <h1>Streams</h1>
     <h2>Running streams</h2>
-    <div id="streams"></div>
+    <div id="streams" class="row"></div>
     <h2>Old records</h2>
     <div id="records"></div>
 </div>
@@ -34,14 +34,12 @@
             }
             data.forEach(entry => {
                 let videoTag = `
-                    <div class="row">
-                        <div class="col-md">
-                            <h3>Camera <span>${entry}</span></h3>
-                            <video poster="/stream/thumb/${entry}/thumb.jpg" controls>
-                                <source src="/stream/webm/${entry}/stream.webm" type="video/webm">
-                                <source src="/stream/hls/${entry}/stream.m3u8" type="application/vnd.apple.mpegurl">
-                            </video>
-                        </div>
+                    <div class="col-md">
+                        <h3>Camera <span>${entry}</span></h3>
+                        <video poster="/stream/thumb/${entry}/thumb.jpg" controls>
+                            <source src="/stream/webm/${entry}/stream.webm" type="video/webm">
+                            <source src="/stream/hls/${entry}/stream.m3u8" type="application/vnd.apple.mpegurl">
+                        </video>
                     </div>`
                 $("#streams").append(videoTag);
             });
