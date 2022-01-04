@@ -17,8 +17,17 @@ class FilesystemRecordService(private val folders: FolderConfig) : RecordService
             ?.map { it.fileName }
             ?.map(Path::toString)
             ?.map { FilenameUtils.removeExtension(it) }
+            ?.sorted(sorter())
             ?.toList()
             ?: emptyList()
+    }
+
+    private fun sorter(): Comparator<String> {
+        return Comparator { a, b ->
+            val dateA = a.split("-", limit = 2)[1]
+            val dateB = b.split("-", limit = 2)[1]
+            dateA.compareTo(dateB)
+        }
     }
 
     override fun getMp4File(record: String): Path? {

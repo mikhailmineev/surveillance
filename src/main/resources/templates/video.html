@@ -8,6 +8,12 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+    <style>
+        video {
+            width: 100%;
+            max-width: 500px;
+        }
+    </style>
 </head>
 <body>
 <nav th:replace="fragments/header :: header('video')"></nav>
@@ -23,12 +29,20 @@
         url: "/stream",
         context: document.body,
         success: function(data) {
+            if (typeof data === 'undefined' || data.length === 0) {
+                $("#streams").append(`<p class="text-muted">No streams running</p>`);
+            }
             data.forEach(entry => {
-                let videoTag = `<h3>Camera <span>${entry}</span></h3>
-                    <video width="470" height="255" poster="/stream/thumb/${entry}/thumb.jpg" controls>
-                        <source src="/stream/webm/${entry}/stream.webm" type="video/webm">
-                        <source src="/stream/hls/${entry}/stream.m3u8" type="application/vnd.apple.mpegurl">
-                    </video>`
+                let videoTag = `
+                    <div class="row">
+                        <div class="col-md">
+                            <h3>Camera <span>${entry}</span></h3>
+                            <video poster="/stream/thumb/${entry}/thumb.jpg" controls>
+                                <source src="/stream/webm/${entry}/stream.webm" type="video/webm">
+                                <source src="/stream/hls/${entry}/stream.m3u8" type="application/vnd.apple.mpegurl">
+                            </video>
+                        </div>
+                    </div>`
                 $("#streams").append(videoTag);
             });
         }
@@ -39,11 +53,22 @@
     context: document.body,
     success: function(data) {
         data.forEach(entry => {
-            let videoTag = `<h3>Camera <span>${entry}</span></h3>
-                <video width="470" height="255" poster="/record/mp4/${entry}/thumb.jpg" controls preload="none">
-                    <source src="/record/mp4/${entry}/record.mp4" type="video/mp4">
-                </video>`
-            $("#records").append(videoTag);
+            let videoGroupTag = `
+                <h3>Record of <span>${entry.date}</span></h3>
+                <div class="row" id="videogroup-${entry.date}">
+                </div>`
+            $("#records").append(videoGroupTag);
+
+            entry.videos.forEach(video => {
+                let videoTag = `
+                    <div class="col-md">
+                        <h4>Camera <span>${video.cameraId}</span></h4>
+                        <video poster="/record/mp4/${video.name}/thumb.jpg" controls preload="none">
+                            <source src="/record/mp4/${video.name}/record.mp4" type="video/mp4">
+                        </video>
+                    </div>`
+                $("#videogroup-" + entry.date).append(videoTag);
+            })
         });
     }
 })

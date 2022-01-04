@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.core.io.FileSystemResource
 import org.springframework.core.io.InputStreamResource
 import org.springframework.http.MediaType
+import ru.mm.surv.dto.StreamRecord
 import java.io.FileInputStream
 
 @RestController
@@ -18,8 +19,8 @@ import java.io.FileInputStream
 class Mp4RecordController(private val recordService: RecordService) {
 
     @GetMapping
-    fun records() : Collection<String> {
-        return recordService.records()
+    fun records() : Collection<StreamRecord> {
+        return fromNameList(recordService.records())
     }
 
     @GetMapping(path = ["/{record}/record.mp4"], produces = ["video/mp4"])
