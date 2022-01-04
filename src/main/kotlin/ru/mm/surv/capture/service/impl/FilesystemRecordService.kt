@@ -26,7 +26,7 @@ class FilesystemRecordService(private val folders: FolderConfig) : RecordService
         return Comparator { a, b ->
             val dateA = a.split("-", limit = 2)[1]
             val dateB = b.split("-", limit = 2)[1]
-            dateA.compareTo(dateB)
+            - dateA.compareTo(dateB)
         }
     }
 
