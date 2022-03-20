@@ -1,22 +1,21 @@
 package ru.mm.surv.web
 
+import org.czentral.incubator.streamm.ControlledStream
+import org.czentral.incubator.streamm.StreamClient
+import org.czentral.incubator.streamm.StreamInput
+import org.czentral.util.stream.MeasuredInputStream
+import org.czentral.util.stream.MeasuredOutputStream
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.bind.annotation.RequestMapping
 import org.slf4j.LoggerFactory
-import ru.mm.surv.codecs.webm.incubator.streamm.ControlledStream
 import java.util.concurrent.ConcurrentHashMap
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.ResponseBody
 import org.springframework.web.bind.annotation.PathVariable
 import javax.servlet.http.HttpServletRequest
-import ru.mm.surv.codecs.webm.util.stream.MeasuredInputStream
-import ru.mm.surv.codecs.webm.incubator.streamm.StreamInput
-import java.io.IOException
 import org.springframework.web.bind.annotation.GetMapping
 import javax.servlet.http.HttpServletResponse
 import org.springframework.web.bind.annotation.RequestParam
-import ru.mm.surv.codecs.webm.util.stream.MeasuredOutputStream
-import ru.mm.surv.codecs.webm.incubator.streamm.StreamClient
 
 private const val MIME_TYPE_WEBM = "video/webm; codecs=\"vp8,vorbis\""
 private const val STR_CONTENT_TYPE = "Content-type"
@@ -43,7 +42,7 @@ class WebmStreamController {
         // put stream to in the collection
         streams[streamId] = stream
         // generate transfer events to mesaure bandwidth usage
-        val mis = MeasuredInputStream(request.inputStream, stream)
+        val mis = MeasuredInputStream(request.inputStream)
         // creating input reader
         val streamInput = StreamInput(stream, mis)
         /*
@@ -97,7 +96,7 @@ class WebmStreamController {
         }
 
         // log transfer events (bandwidth usage)
-        val mos = MeasuredOutputStream(response.outputStream, stream, PACKET_SIZE)
+        val mos = MeasuredOutputStream(response.outputStream, PACKET_SIZE)
 
         // create a client
         val client = StreamClient(stream, mos)
