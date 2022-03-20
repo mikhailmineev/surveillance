@@ -1,15 +1,12 @@
 package ru.mm.surv.web
 
-import org.springframework.web.bind.annotation.RestController
-import org.springframework.web.bind.annotation.RequestMapping
 import lombok.extern.slf4j.Slf4j
 import ru.mm.surv.capture.service.RecordService
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.http.ResponseEntity
 import org.springframework.core.io.FileSystemResource
 import org.springframework.core.io.InputStreamResource
 import org.springframework.http.MediaType
+import org.springframework.web.bind.annotation.*
 import ru.mm.surv.dto.StreamRecord
 import java.io.FileInputStream
 
@@ -30,6 +27,11 @@ class Mp4RecordController(private val recordService: RecordService) {
             ?.let(::FileSystemResource)
             ?.let { ResponseEntity.ok(it) }
             ?: ResponseEntity.notFound().build()
+    }
+
+    @DeleteMapping(path = ["/{record}/record.mp4"])
+    fun deleteFile(@PathVariable("record") record: String) {
+        recordService.deleteMp4File(record)
     }
 
     @GetMapping(path = ["/{record}/thumb.jpg"], produces = [MediaType.IMAGE_JPEG_VALUE])

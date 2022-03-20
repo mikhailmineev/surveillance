@@ -47,29 +47,53 @@
     })
 
     $.ajax({
-    url: "/record/mp4",
-    context: document.body,
-    success: function(data) {
-        data.forEach(entry => {
-            let videoGroupTag = `
-                <h3>Record of <span>${entry.date}</span></h3>
-                <div class="row" id="videogroup-${entry.date}">
+        url: "/record/mp4",
+        context: document.body,
+        success: function (data) {
+            data.forEach(entry => {
+                let videoGroupTag = `
+                <div id="recordframe-${entry.date}">
+                    <h3>Record of <span>${entry.date}</span></h3>
+                    <div class="row" id="videogroup-${entry.date}">
+                    </div>
                 </div>`
-            $("#records").append(videoGroupTag);
+                $("#records").append(videoGroupTag);
 
-            entry.videos.forEach(video => {
-                let videoTag = `
-                    <div class="col-md">
-                        <h4>Camera <span>${video.cameraId}</span></h4>
+                entry.videos.forEach(video => {
+                    let videoTag = `
+                    <div class="col-md" id="videoelement-${video.name}">
+                        <h4>Camera <span>${video.cameraId}</span> <button>Delete</button></h4>
                         <video poster="/record/mp4/${video.name}/thumb.jpg" controls preload="none">
                             <source src="/record/mp4/${video.name}/record.mp4" type="video/mp4">
                         </video>
                     </div>`
-                $("#videogroup-" + entry.date).append(videoTag);
-            })
-        });
+                    $("#videogroup-" + entry.date).append(videoTag);
+                    $(`#videoelement-${video.name} button`).click(function() {
+                        if (confirm(`Delete video ${video.name}?`)) {
+                            deleteVideo(video);
+                        }
+                    })
+
+                })
+            });
+        }
+    })
+
+    deleteVideo = function (video) {
+        $.ajax({
+            url: `/record/mp4/${video.name}/record.mp4`,
+            type: 'DELETE',
+            context: document.body,
+            success: function () {
+                let videoSelector = `#videoelement-${video.name}`;
+                let parent = $(videoSelector).parent();
+                $(videoSelector).remove();
+                if (parent.children().length === 0) {
+                    parent.parent().remove()
+                }
+            }
+        })
     }
-})
 </script>
 </body>
 </html>

@@ -6,4 +6,5 @@ interface RecordService {
     fun records(): Collection<String>
     fun getMp4File(record: String): Path?
     fun getThumb(record: String): Path?
+    fun deleteMp4File(record: String)
 }

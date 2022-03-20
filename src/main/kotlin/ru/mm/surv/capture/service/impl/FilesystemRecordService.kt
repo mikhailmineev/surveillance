@@ -6,6 +6,7 @@ import org.apache.commons.io.FilenameUtils
 import org.springframework.stereotype.Service
 import java.nio.file.Files
 import java.nio.file.Path
+import kotlin.io.path.deleteIfExists
 import kotlin.streams.toList
 
 @Service
@@ -31,10 +32,19 @@ class FilesystemRecordService(private val folders: FolderConfig) : RecordService
     }
 
     override fun getMp4File(record: String): Path? {
-        return folders.mp4.resolve("$record.mp4").takeIf { Files.exists(it) }
+        return mp4FilePath(record).takeIf { Files.exists(it) }
     }
 
     override fun getThumb(record: String): Path? {
-        return folders.mp4Thumb.resolve("$record.jpg").takeIf { Files.exists(it) }
+        return thumbPath(record).takeIf { Files.exists(it) }
     }
+
+    override fun deleteMp4File(record: String) {
+        mp4FilePath(record).deleteIfExists()
+        thumbPath(record).deleteIfExists()
+    }
+
+    private fun thumbPath(record: String) = folders.mp4Thumb.resolve("$record.jpg")
+
+    private fun mp4FilePath(record: String) = folders.mp4.resolve("$record.mp4")
 }
