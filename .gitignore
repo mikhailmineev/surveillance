@@ -8,3 +8,7 @@
 # Build files
 .gradle
 build
+
+# local environment sensitive files
+keys*
+passwords.env

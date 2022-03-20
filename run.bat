@@ -1,4 +1,5 @@
 @ECHO OFF
 
-java -jar build/libs/surveillance.jar
+docker-compose up -d
+gradlew bootRun
 pause

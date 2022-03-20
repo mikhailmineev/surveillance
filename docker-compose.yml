@@ -20,6 +20,8 @@ services:
     environment:
       POSTGRES_DB: keycloak
       POSTGRES_USER: keycloak
+    env_file:
+      - passwords.env
   keycloak:
     image: quay.io/keycloak/keycloak:legacy
     environment:
@@ -30,6 +32,8 @@ services:
       DB_SCHEMA: public
       KEYCLOAK_USER: admin
       PROXY_ADDRESS_FORWARDING: 'true'
+    env_file:
+      - passwords.env
     volumes:
       - ./keys/selfsigned.crt:/etc/x509/https/tls.crt
       - ./keys/selfsigned.key:/etc/x509/https/tls.key
