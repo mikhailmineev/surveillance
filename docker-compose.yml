@@ -1,0 +1,37 @@
+version: '3'
+
+volumes:
+  postgres_data:
+    driver: local
+
+services:
+  nginx:
+    image: nginx:latest
+    ports:
+      - 8443:443
+    volumes:
+      - ./nginx/:/etc/nginx/conf.d/
+      - ./keys/selfsigned.crt:/etc/nginx/ssl/tls.crt
+      - ./keys/selfsigned.key:/etc/nginx/ssl/tls.key
+  postgres:
+    image: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+  keycloak:
+    image: quay.io/keycloak/keycloak:legacy
+    environment:
+      DB_VENDOR: POSTGRES
+      DB_ADDR: postgres
+      DB_DATABASE: keycloak
+      DB_USER: keycloak
+      DB_SCHEMA: public
+      KEYCLOAK_USER: admin
+      PROXY_ADDRESS_FORWARDING: 'true'
+    volumes:
+      - ./keys/selfsigned.crt:/etc/x509/https/tls.crt
+      - ./keys/selfsigned.key:/etc/x509/https/tls.key
+    depends_on:
+      - postgres
