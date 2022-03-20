@@ -31,4 +31,9 @@ class Web(
         model["streamActive"] = ffmpegStream.isActive()
         return "configure.html"
     }
+
+    @GetMapping("actuatorui")
+    fun actuatorPage(model: Model): String {
+        return "actuator.html"
+    }
 }
