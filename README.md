@@ -3,59 +3,21 @@
 ### Через maven
 
 ```bash
-gradlew assemble
 run
 ```
 
 ## Первый запуск
 
-Создать контейнер с серверным сертификатом
-
 ```bash
-keytool -genkeypair -alias selfsigned -keyalg RSA -validity 365 --keystore keystore.jks
+sh first_configure.sh
 ```
 
-Далее указать пароль и данные сертификата
+Создать файл `application.properties`. Заполнить файл содержимым ниже, заменив `******` на пароли
+
+Команда для создания файла, запускать в корне проекта
 
 ```bash
-Enter keystore password:  
-Re-enter new password: 
-What is your first and last name?
-  [Unknown]:  
-What is the name of your organizational unit?
-  [Unknown]:  
-What is the name of your organization?
-  [Unknown]:  
-What is the name of your City or Locality?
-  [Unknown]:  
-What is the name of your State or Province?
-  [Unknown]:  
-What is the two-letter country code for this unit?
-  [Unknown]:  
-Is CN=Unknown, OU=Unknown, O=Unknown, L=Unknown, ST=Unknown, C=Unknown correct?
-  [no]:  yes
-```
-
-Создать в корне проекта файл `application.properties`. Заполнить файл содержимым ниже, заменив `******` на пароли
-
-```properties
-server.ssl.key-store=keystore.jks
-server.ssl.key-store-password=******
-server.ssl.key-alias=selfsigned
-
-auth.users.user1.username=publisher
-auth.users.user1.password=*******
-auth.users.user1.roles=PUBLISHER
-auth.users.user2.username=consumer
-auth.users.user2.password=******
-auth.users.user2.roles=CONSUMER,ADMIN
-```
-
-Команда для создания файла
-
-```bash
-server.ssl.key-store=keystore.jks
-server.ssl.key-store-password=******
+"server.ssl.key-store-password=******
 server.ssl.key-alias=selfsigned
 
 auth.users.user1.username=publisher
@@ -63,13 +25,12 @@ auth.users.user1.password=*******
 auth.users.user1.role=PUBLISHER
 auth.users.user2.username=consumer
 auth.users.user2.password=******
-auth.users.user2.role=CONSUMER" >> application.properties
-
+auth.users.user2.role=CONSUMER" >> backend/application.properties
 ```
 
 Запустить проект
 
-Сервис будет доступен по https://localhost:8443
+Сервис будет доступен по https://localhost:443
 
 Зайти через администратора на сайт
 

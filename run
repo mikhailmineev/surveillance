@@ -1,4 +1,5 @@
 #!/bin/sh
 
+sh gradlew assemble
 docker-compose up -d
 sh gradlew bootRun
