@@ -23,7 +23,7 @@ services:
       POSTGRES_DB: keycloak
       POSTGRES_USER: keycloak
     env_file:
-      - passwords.env
+      - .env
   keycloak:
     image: quay.io/keycloak/keycloak:20.0.1
     command: start-dev
@@ -40,7 +40,7 @@ services:
       KC_HTTP_RELATIVE_PATH: /auth
       KEYCLOAK_ADMIN: admin
     env_file:
-      - passwords.env
+      - .env
     volumes:
       - ./keys/keystore.jks:/etc/x509/https/keystore.jks
     depends_on:

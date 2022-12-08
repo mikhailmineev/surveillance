@@ -25,9 +25,13 @@ if [ ! -f "keystore.jks" ]; then
     openssl pkcs12 -in keystore.p12 -passin "pass:$PASSWORD" -nokeys -clcerts -out tls.crt
     openssl pkcs12 -in keystore.p12 -passin "pass:$PASSWORD" -nocerts -nodes -out tls.key
     cd ".."
-    echo "POSTGRES_PASSWORD=$PASSWORD" >> "passwords.env"
-    echo "KC_DB_PASSWORD=$PASSWORD" >> "passwords.env"
-    echo "KC_HTTPS_KEY_STORE_PASSWORD=$PASSWORD" >> "passwords.env"
-    echo "KEYCLOAK_ADMIN_PASSWORD=$PASSWORD" >> "passwords.env"
+
+    echo "POSTGRES_PASSWORD=$PASSWORD" >> ".env"
+    echo "KC_DB_PASSWORD=$PASSWORD" >> ".env"
+    echo "KC_HTTPS_KEY_STORE_PASSWORD=$PASSWORD" >> ".env"
+    echo "KEYCLOAK_ADMIN_PASSWORD=$PASSWORD" >> ".env"
+
+    echo "server.ssl.key-store-password=$PASSWORD" >> "application.properties"
+
     echo "Use credential admin/$PASSWORD to login in the application"
 fi

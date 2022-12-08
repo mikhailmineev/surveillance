@@ -17,10 +17,7 @@ sh first_configure.sh
 Команда для создания файла, запускать в корне проекта
 
 ```bash
-"server.ssl.key-store-password=******
-server.ssl.key-alias=selfsigned
-
-auth.users.user1.username=publisher
+"auth.users.user1.username=publisher
 auth.users.user1.password=*******
 auth.users.user1.role=PUBLISHER
 auth.users.user2.username=consumer
