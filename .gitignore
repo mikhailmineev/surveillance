@@ -12,3 +12,7 @@ build
 # local environment sensitive files
 keys*
 passwords.env
+
+# Local files
+application.properties
+keystore.jks
