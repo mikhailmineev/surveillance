@@ -1,2 +1,2 @@
 rootProject.name = "surveillance"
-include("backend")
+include("backend", "frontend")
