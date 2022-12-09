@@ -2,25 +2,20 @@ import Container from 'react-bootstrap/Container';
 import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
 import Button from "react-bootstrap/Button";
-import {useEffect, useState} from "react";
-import {SystemInfo, User, UserRole} from "../types/types";
-import {anonymousUser} from "../types/defaults";
+import { useEffect, useState } from "react";
+import { SystemInfo } from "../types/types";
 import { useKeycloak } from "@react-keycloak/web";
 import { Link } from "react-router-dom"
 import * as React from "react";
 
 function Header() {
-    const [currentUser, setCurrentUser] = useState<User>(anonymousUser());
     const [systemInfo, setSystemInfo] = useState<SystemInfo | undefined>(undefined);
     const { keycloak } = useKeycloak();
 
     useEffect(() => {
         const fetchData = async () => {
-            let rawUserData = await fetch("/api/user")
             let rawSystemData = await fetch("/api/system")
-            let userData = await rawUserData.json()
             let systemData = await rawSystemData.json()
-            setCurrentUser(userData)
             setSystemInfo(systemData)
         }
         fetchData()
@@ -35,12 +30,12 @@ function Header() {
                         <Nav.Item as="li">
                             <Nav.Link as={Link} to="/">Streams</Nav.Link>
                         </Nav.Item>
-                        { currentUser.role === UserRole.ADMIN &&
+                        { keycloak.tokenParsed?.resource_access?.surveillance.roles.includes("ADMIN") &&
                             <Nav.Item as="li">
                                 <Nav.Link as={Link} to="/configure">Configure</Nav.Link>
                             </Nav.Item>
                         }
-                        { currentUser.role === UserRole.ADMIN &&
+                        { keycloak.tokenParsed?.resource_access?.surveillance.roles.includes("ADMIN") &&
                             <Nav.Item as="li">
                                 <Nav.Link as={Link} to="/actuator">Actuator</Nav.Link>
                             </Nav.Item>
@@ -57,10 +52,10 @@ function Header() {
                                 Logout ({keycloak.tokenParsed?.preferred_username})
                             </Button>
                         )}
-                        { currentUser.role === UserRole.ADMIN && systemInfo?.streamActive === false &&
+                        { keycloak.tokenParsed?.resource_access?.surveillance.roles.includes("ADMIN") && systemInfo?.streamActive === false &&
                             <Button className="mr-2" variant="primary" href="/stream/control/start">Start stream</Button>
                         }
-                        { currentUser.role === UserRole.ADMIN && systemInfo?.streamActive === true &&
+                        { keycloak.tokenParsed?.resource_access?.surveillance.roles.includes("ADMIN") && systemInfo?.streamActive === true &&
                             <Button className="mr-2" variant="danger" href="/stream/control/stop">Stop stream</Button>
                         }
                     </Container>
