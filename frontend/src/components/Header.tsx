@@ -29,16 +29,16 @@ function Header() {
                 <Navbar.Collapse id="navbarNav">
                     <Nav className="mr-auto" as="ul">
                         <Nav.Item as="li">
-                            <Nav.Link href="#">Streams</Nav.Link>
+                            <Nav.Link href="#/">Streams</Nav.Link>
                         </Nav.Item>
-                        { currentUser.role === UserRole.ADMIN && // TODO #23 Fix router
+                        { currentUser.role === UserRole.ADMIN &&
                             <Nav.Item as="li">
-                                <Nav.Link href="#configure">Configure</Nav.Link>
+                                <Nav.Link href="#/configure">Configure</Nav.Link>
                             </Nav.Item>
                         }
                         { currentUser.role === UserRole.ADMIN &&
                             <Nav.Item as="li">
-                                <Nav.Link href="#actuatorui">Actuator</Nav.Link>
+                                <Nav.Link href="#/actuatorui">Actuator</Nav.Link>
                             </Nav.Item>
                         }
                     </Nav>
