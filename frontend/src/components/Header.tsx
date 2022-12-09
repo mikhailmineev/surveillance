@@ -5,10 +5,14 @@ import Button from "react-bootstrap/Button";
 import {useEffect, useState} from "react";
 import {SystemInfo, User, UserRole} from "../types/types";
 import {anonymousUser} from "../types/defaults";
+import { useKeycloak } from "@react-keycloak/web";
+import { Link } from "react-router-dom"
+import * as React from "react";
 
 function Header() {
     const [currentUser, setCurrentUser] = useState<User>(anonymousUser());
     const [systemInfo, setSystemInfo] = useState<SystemInfo | undefined>(undefined);
+    const { keycloak } = useKeycloak();
 
     useEffect(() => {
         const fetchData = async () => {
@@ -29,21 +33,30 @@ function Header() {
                 <Navbar.Collapse id="navbarNav">
                     <Nav className="mr-auto" as="ul">
                         <Nav.Item as="li">
-                            <Nav.Link href="#/">Streams</Nav.Link>
+                            <Nav.Link as={Link} to="/">Streams</Nav.Link>
                         </Nav.Item>
                         { currentUser.role === UserRole.ADMIN &&
                             <Nav.Item as="li">
-                                <Nav.Link href="#/configure">Configure</Nav.Link>
+                                <Nav.Link as={Link} to="/configure">Configure</Nav.Link>
                             </Nav.Item>
                         }
                         { currentUser.role === UserRole.ADMIN &&
                             <Nav.Item as="li">
-                                <Nav.Link href="#/actuatorui">Actuator</Nav.Link>
+                                <Nav.Link as={Link} to="/actuator">Actuator</Nav.Link>
                             </Nav.Item>
                         }
                     </Nav>
                     <Container fluid className="p-0 d-flex justify-content-between flex-row-reverse">
-                        <Button variant="outline-primary" href="/logout">Logout</Button>
+                        {!keycloak.authenticated && (
+                            <Button variant="outline-primary" onClick={() => keycloak.login()}>
+                                Login
+                            </Button>
+                        )}
+                        {!!keycloak.authenticated && (
+                            <Button variant="outline-primary" onClick={() => keycloak.logout()}>
+                                Logout ({keycloak.tokenParsed?.preferred_username})
+                            </Button>
+                        )}
                         { currentUser.role === UserRole.ADMIN && systemInfo?.streamActive === false &&
                             <Button className="mr-2" variant="primary" href="/stream/control/start">Start stream</Button>
                         }
