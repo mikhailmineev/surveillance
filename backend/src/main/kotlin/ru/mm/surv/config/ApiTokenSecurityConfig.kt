@@ -29,6 +29,9 @@ class ApiTokenSecurityConfig @Autowired constructor(
             .antMatchers("/stream/control/**").hasRole(UserRole.ADMIN.toString())
             .antMatchers("/stream/**").hasRole(UserRole.CONSUMER.toString())
             .antMatchers("/record/**").hasRole(UserRole.CONSUMER.toString())
+            // TODO #22 remove after token auth implemented
+            .antMatchers("/user").permitAll()
+            .antMatchers("/system").permitAll()
             .anyRequest().authenticated()
             .and()
             .formLogin().defaultSuccessUrl("/", true).permitAll()
