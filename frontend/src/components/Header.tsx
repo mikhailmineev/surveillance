@@ -9,7 +9,7 @@ import { Link } from "react-router-dom"
 import * as React from "react";
 import {useCurrentUser} from "../hooks/CurrentUserHook";
 
-function Header() {
+export default () => {
     const [systemInfo, setSystemInfo] = useState<SystemInfo | undefined>(undefined);
     const { keycloak } = useKeycloak();
     const currentUser = useCurrentUser();
@@ -66,5 +66,3 @@ function Header() {
         </Navbar>
     );
 }
-
-export default Header;
