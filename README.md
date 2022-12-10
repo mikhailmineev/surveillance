@@ -19,10 +19,7 @@ sh first_configure.sh
 ```bash
 "auth.users.user1.username=publisher
 auth.users.user1.password=*******
-auth.users.user1.role=PUBLISHER
-auth.users.user2.username=consumer
-auth.users.user2.password=******
-auth.users.user2.role=CONSUMER" >> backend/application.properties
+auth.users.user1.role=PUBLISHER" >> backend/application.properties
 ```
 
 Запустить проект

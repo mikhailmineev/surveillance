@@ -11,6 +11,8 @@ if [ ! -f "keystore.jks" ]; then
         -alias "selfsigned" \
         -keyalg "RSA" \
         -validity 365 \
+        -dname "CN=localhost, OU=Unknown, O=Unknown, L=Unknown, ST=Unknown, C=Unknown" \
+        -ext "SAN=DNS:localhost" \
         --keystore "keystore.jks" \
         -storepass "$PASSWORD" \
         -noprompt
@@ -32,6 +34,7 @@ if [ ! -f "keystore.jks" ]; then
     echo "KEYCLOAK_ADMIN_PASSWORD=$PASSWORD" >> ".env"
 
     echo "server.ssl.key-store-password=$PASSWORD" >> "application.properties"
+    echo "client.ssl.trust-store-password=$PASSWORD" >> "application.properties"
 
     echo "Use credential admin/$PASSWORD to login in the application"
 fi
