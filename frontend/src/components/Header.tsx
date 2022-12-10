@@ -3,14 +3,16 @@ import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
 import Button from "react-bootstrap/Button";
 import { useEffect, useState } from "react";
-import { SystemInfo } from "../types/types";
+import {SystemInfo, UserRole} from "../types/types";
 import { useKeycloak } from "@react-keycloak/web";
 import { Link } from "react-router-dom"
 import * as React from "react";
+import {useCurrentUser} from "../hooks/CurrentUserHook";
 
 function Header() {
     const [systemInfo, setSystemInfo] = useState<SystemInfo | undefined>(undefined);
     const { keycloak } = useKeycloak();
+    const currentUser = useCurrentUser();
 
     useEffect(() => {
         const fetchData = async () => {
@@ -30,32 +32,32 @@ function Header() {
                         <Nav.Item as="li">
                             <Nav.Link as={Link} to="/">Streams</Nav.Link>
                         </Nav.Item>
-                        { keycloak.tokenParsed?.resource_access?.surveillance.roles.includes("ADMIN") &&
+                        { currentUser.hasRole(UserRole.ADMIN) &&
                             <Nav.Item as="li">
                                 <Nav.Link as={Link} to="/configure">Configure</Nav.Link>
                             </Nav.Item>
                         }
-                        { keycloak.tokenParsed?.resource_access?.surveillance.roles.includes("ADMIN") &&
+                        { currentUser.hasRole(UserRole.ADMIN) &&
                             <Nav.Item as="li">
                                 <Nav.Link as={Link} to="/actuator">Actuator</Nav.Link>
                             </Nav.Item>
                         }
                     </Nav>
                     <Container fluid className="p-0 d-flex justify-content-between flex-row-reverse">
-                        {!keycloak.authenticated && (
+                        { !currentUser.isAuthenticated && (
                             <Button variant="outline-primary" onClick={() => keycloak.login()}>
                                 Login
                             </Button>
                         )}
-                        {!!keycloak.authenticated && (
+                        { currentUser.isAuthenticated && (
                             <Button variant="outline-primary" onClick={() => keycloak.logout()}>
-                                Logout ({keycloak.tokenParsed?.preferred_username})
+                                Logout ({currentUser.preferredUsername})
                             </Button>
                         )}
-                        { keycloak.tokenParsed?.resource_access?.surveillance.roles.includes("ADMIN") && systemInfo?.streamActive === false &&
+                        { currentUser.hasRole(UserRole.ADMIN) && systemInfo?.streamActive === false &&
                             <Button className="mr-2" variant="primary" href="/stream/control/start">Start stream</Button>
                         }
-                        { keycloak.tokenParsed?.resource_access?.surveillance.roles.includes("ADMIN") && systemInfo?.streamActive === true &&
+                        { currentUser.hasRole(UserRole.ADMIN) && systemInfo?.streamActive === true &&
                             <Button className="mr-2" variant="danger" href="/stream/control/stop">Stop stream</Button>
                         }
                     </Container>
