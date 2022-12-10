@@ -1,12 +1,18 @@
 import * as React from 'react'
 import {useEffect, useState} from "react";
+import {useKeycloak} from "@react-keycloak/web";
 
 export default () => {
     const [streams, setStreams] = useState<string[]>([])
+    const { keycloak } = useKeycloak();
 
     useEffect(() => {
         const fetchData = async () => {
-            let rawStreamData = await fetch("/api/stream")
+            let rawStreamData = await fetch("/api/stream", {
+                headers: {
+                    "Authorization": "Bearer " + keycloak.token
+                }
+            })
             let streamData = await rawStreamData.json()
             setStreams(streamData)
         }
