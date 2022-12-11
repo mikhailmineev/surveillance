@@ -16,12 +16,18 @@ export default () => {
 
     useEffect(() => {
         const fetchData = async () => {
-            let rawSystemData = await fetch("/api/system")
-            let systemData = await rawSystemData.json()
-            setSystemInfo(systemData)
+            if (currentUser.isAuthenticated) {
+                let rawSystemData = await fetch("/api/system", {
+                    headers: {
+                        "Authorization": "Bearer " + keycloak.token
+                    }
+                })
+                let systemData = await rawSystemData.json()
+                setSystemInfo(systemData)
+            }
         }
         fetchData()
-    }, [])
+    }, [currentUser.isAuthenticated])
     return (
         <Navbar bg="light" expand="md">
             <Container>
