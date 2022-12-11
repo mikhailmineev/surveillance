@@ -11,6 +11,8 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.oauth2.jwt.JwtDecoder
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter
+import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter
 import org.springframework.web.client.RestTemplate
 
 @Configuration
@@ -36,9 +38,7 @@ class ApiTokenSecurityConfig @Autowired constructor(
             .antMatchers("/stream/control/**").hasRole(UserRole.ADMIN.toString())
             .antMatchers("/stream/**").hasRole(UserRole.CONSUMER.toString())
             .antMatchers("/record/**").hasRole(UserRole.CONSUMER.toString())
-            // TODO #22 remove after token auth implemented
-            .antMatchers("/user").permitAll()
-            .antMatchers("/system").permitAll()
+            .antMatchers("/system/**").hasRole(UserRole.CONSUMER.toString())
             .anyRequest().authenticated()
             .and()
             .formLogin().disable()
@@ -46,16 +46,33 @@ class ApiTokenSecurityConfig @Autowired constructor(
             .oauth2ResourceServer {
                 it.jwt {
                     it.decoder(jwtDecoder())
-
-
+                    it.jwtAuthenticationConverter(jwtAuthenticationConverter())
                 }
             }
     }
 
     @Bean
+    /*
+     * Overriding default decoder only to pass custom restTemplate
+     * Have to set jwks uri because it can use custom restTemplate, but well-known param can`t
+     */
     fun jwtDecoder(): JwtDecoder {
         return NimbusJwtDecoder.withJwkSetUri(jwkSetUrl).restOperations(restTemplate).build()
     }
 
+    @Bean
+    /*
+     * Overriding converter because need to fetch user roles
+     * It is impossible to use scopes as user roles, they restrict only clients
+     */
+    fun jwtAuthenticationConverter(): JwtAuthenticationConverter {
+        val grantedAuthoritiesConverter = JwtGrantedAuthoritiesConverter()
+        grantedAuthoritiesConverter.setAuthoritiesClaimName("roles")
+        grantedAuthoritiesConverter.setAuthorityPrefix("ROLE_")
+
+        val jwtAuthenticationConverter = JwtAuthenticationConverter()
+        jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(grantedAuthoritiesConverter)
+        return jwtAuthenticationConverter
+    }
 
 }
