@@ -5,7 +5,7 @@ export const ProtectedRoute = ({children} : {children : JSX.Element}) : JSX.Elem
     const currentUser = useCurrentUser();
 
     return currentUser.isAuthenticated ? children :
-        <div>
-            <h1 className="text-green-800 text-4xl">401 Unauthenticated</h1>
+        <div className="container">
+            <h1>401 Unauthenticated</h1>
         </div>
 }

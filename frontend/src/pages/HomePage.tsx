@@ -1,9 +1,11 @@
 import * as React from 'react'
 import {useEffect, useState} from "react";
 import {useKeycloak} from "@react-keycloak/web";
+import {StreamRecord, StreamRecordVideo} from "../types/types";
 
 export default () => {
     const [streams, setStreams] = useState<string[]>([])
+    const [records, setRecords] = useState<StreamRecord[]>([])
     const { keycloak } = useKeycloak();
 
     useEffect(() => {
@@ -15,9 +17,44 @@ export default () => {
             })
             let streamData = await rawStreamData.json()
             setStreams(streamData)
+
+            let rawRecordsData = await fetch("/api/record/mp4", {
+                headers: {
+                    "Authorization": "Bearer " + keycloak.token
+                }
+            })
+            let recordsData = await rawRecordsData.json()
+            setRecords(recordsData)
         }
         fetchData()
     }, [])
+    const videoStyle = {
+        width: "100%",
+        maxWidth: "500px"
+    }
+    const requestDeleteVideo = (video : StreamRecordVideo) => {
+        if (window.confirm(`Delete video ${video.name}?`)) {
+            deleteVideo(video);
+        }
+    }
+    const deleteVideo = async (video: StreamRecordVideo) => {
+        await fetch(`/record/mp4/${video.name}/record.mp4`, {
+            method: 'DELETE',
+            headers: {
+                "Authorization": "Bearer " + keycloak.token
+            }
+        })
+
+        let recordsCopy: StreamRecord[] = []
+        records.forEach(record => {
+            let recordVideosCopy = record.videos.filter(e => e !== video)
+            if (recordVideosCopy.length > 0) {
+                recordsCopy.push({date: record.date, videos: recordVideosCopy});
+            }
+        })
+
+        setRecords(recordsCopy)
+    }
 
     return (
         <div className="container">
@@ -31,18 +68,38 @@ export default () => {
                     return (
                         <div className="col-md">
                             <h3>Camera <span>{entry}</span></h3>
-                            <video poster={`/stream/thumb/$entry/thumb.jpg`} controls>
-                                <source src={"/stream/webm/$entry/stream.webm"} type="video/webm" />
-                                <source src={"/stream/hls/$entry/stream.m3u8"} type="application/vnd.apple.mpegurl" />
+                            <video poster={`/stream/thumb/${entry}/thumb.jpg`} controls style={videoStyle}>
+                                <source src={`/stream/webm/${entry}/stream.webm`} type="video/webm" />
+                                <source src={`/stream/hls/${entry}/stream.m3u8`} type="application/vnd.apple.mpegurl" />
                             </video>
                         </div>
-                )
+                    )
                 })}
             </div>
             <h2>Old records</h2>
             <div id="records">
-
+                { records.map(entry => {
+                    return (
+                        <div id={`recordframe-${entry.date}`}>
+                            <h3>Record of <span>{entry.date}</span></h3>
+                            <div className="row" id={`videogroup-${entry.date}`}>
+                                { entry.videos.map(video => {
+                                    return (
+                                        <div className="col-md" id={`videoelement-${video.name}`}>
+                                            <h4>Camera <span>{video.cameraId}</span>
+                                                <button onClick={() => { requestDeleteVideo(video) }}>Delete</button>
+                                            </h4>
+                                            <video poster={`/record/mp4/${video.name}/thumb.jpg`} controls style={videoStyle} preload="none">
+                                                <source src={`/record/mp4/${video.name}/record.mp4`} type="video/mp4" />
+                                            </video>
+                                        </div>
+                                    )
+                                })}
+                                </div>
+                        </div>
+                    )
+                })}
             </div>
         </div>
-    );
-};
+    )
+}
