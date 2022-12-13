@@ -5,6 +5,7 @@ import ru.mm.surv.capture.service.RecordService
 import org.springframework.http.ResponseEntity
 import org.springframework.core.io.FileSystemResource
 import org.springframework.core.io.InputStreamResource
+import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.*
 import ru.mm.surv.dto.StreamRecord
@@ -30,6 +31,7 @@ class Mp4RecordController(private val recordService: RecordService) {
     }
 
     @DeleteMapping(path = ["/{record}/record.mp4"])
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     fun deleteFile(@PathVariable("record") record: String) {
         recordService.deleteMp4File(record)
     }

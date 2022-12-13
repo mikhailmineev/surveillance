@@ -38,7 +38,7 @@ export default () => {
         }
     }
     const deleteVideo = async (video: StreamRecordVideo) => {
-        await fetch(`/record/mp4/${video.name}/record.mp4`, {
+        await fetch(`/api/record/mp4/${video.name}/record.mp4`, {
             method: 'DELETE',
             headers: {
                 "Authorization": "Bearer " + keycloak.token
@@ -68,9 +68,9 @@ export default () => {
                     return (
                         <div className="col-md">
                             <h3>Camera <span>{entry}</span></h3>
-                            <video poster={`/stream/thumb/${entry}/thumb.jpg`} controls style={videoStyle}>
-                                <source src={`/stream/webm/${entry}/stream.webm`} type="video/webm" />
-                                <source src={`/stream/hls/${entry}/stream.m3u8`} type="application/vnd.apple.mpegurl" />
+                            <video poster={`/api/stream/thumb/${entry}/thumb.jpg?access_token=${keycloak.token}`} controls style={videoStyle}>
+                                <source src={`/api/stream/webm/${entry}/stream.webm?access_token=${keycloak.token}`} type="video/webm" />
+                                <source src={`/api/stream/hls/${entry}/stream.m3u8?access_token=${keycloak.token}`} type="application/vnd.apple.mpegurl" />
                             </video>
                         </div>
                     )
@@ -89,8 +89,8 @@ export default () => {
                                             <h4>Camera <span>{video.cameraId}</span>
                                                 <button onClick={() => { requestDeleteVideo(video) }}>Delete</button>
                                             </h4>
-                                            <video poster={`/record/mp4/${video.name}/thumb.jpg`} controls style={videoStyle} preload="none">
-                                                <source src={`/record/mp4/${video.name}/record.mp4`} type="video/mp4" />
+                                            <video poster={`/api/record/mp4/${video.name}/thumb.jpg?access_token=${keycloak.token}`} controls style={videoStyle} preload="none">
+                                                <source src={`/api/record/mp4/${video.name}/record.mp4?access_token=${keycloak.token}`} type="video/mp4" />
                                             </video>
                                         </div>
                                     )

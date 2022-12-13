@@ -3,7 +3,7 @@ import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
 import Button from "react-bootstrap/Button";
 import { useEffect, useState } from "react";
-import {SystemInfo, UserRole} from "../types/types";
+import { SystemInfo, UserRole} from "../types/types";
 import { useKeycloak } from "@react-keycloak/web";
 import { Link } from "react-router-dom"
 import * as React from "react";
@@ -28,6 +28,22 @@ export default () => {
         }
         fetchData()
     }, [currentUser.isAuthenticated])
+
+    const changeStreamState = async (mode: "start" | "stop") => {
+        await fetch(`/api/stream/control/${mode}`, {
+            method: 'POST',
+            headers: {
+                "Authorization": "Bearer " + keycloak.token
+            }
+        })
+        if (systemInfo !== undefined) {
+            let newSystemInfo = {
+                streamActive: !systemInfo.streamActive
+            }
+            setSystemInfo(newSystemInfo)
+        }
+    }
+
     return (
         <Navbar bg="light" expand="md">
             <Container>
@@ -61,10 +77,10 @@ export default () => {
                             </Button>
                         )}
                         { currentUser.hasRole(UserRole.ADMIN) && systemInfo?.streamActive === false &&
-                            <Button className="mr-2" variant="primary" href="/stream/control/start">Start stream</Button>
+                            <Button className="mr-2" variant="primary" onClick={() => changeStreamState("start")}>Start stream</Button>
                         }
                         { currentUser.hasRole(UserRole.ADMIN) && systemInfo?.streamActive === true &&
-                            <Button className="mr-2" variant="danger" href="/stream/control/stop">Stop stream</Button>
+                            <Button className="mr-2" variant="danger" onClick={() => changeStreamState("stop")}>Stop stream</Button>
                         }
                     </Container>
                 </Navbar.Collapse>

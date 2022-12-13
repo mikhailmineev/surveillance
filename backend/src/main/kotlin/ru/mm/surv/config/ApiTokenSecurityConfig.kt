@@ -13,6 +13,8 @@ import org.springframework.security.oauth2.jwt.JwtDecoder
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter
+import org.springframework.security.oauth2.server.resource.web.BearerTokenResolver
+import org.springframework.security.oauth2.server.resource.web.DefaultBearerTokenResolver
 import org.springframework.web.client.RestTemplate
 
 @Configuration
@@ -73,6 +75,18 @@ class ApiTokenSecurityConfig @Autowired constructor(
         val jwtAuthenticationConverter = JwtAuthenticationConverter()
         jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(grantedAuthoritiesConverter)
         return jwtAuthenticationConverter
+    }
+
+    @Bean
+    /*
+     * There are some static assets (images), that require authorization.
+     * The only way to authenticate access to them is to pass jwt as query param.
+     * We need to enable that explicitly
+     */
+    fun defaultBearerTokenResolver(): BearerTokenResolver {
+        val bearerTokenResolver = DefaultBearerTokenResolver()
+        bearerTokenResolver.setAllowUriQueryParameter(true)
+        return bearerTokenResolver
     }
 
 }
