@@ -17,7 +17,7 @@ class SystemController(
 
     @GetMapping("system")
     fun systemInfo(): SystemInfo {
-        return SystemInfo(ffmpegStream.isActive())
+        return SystemInfo(ffmpegStream.status())
     }
 
     @GetMapping("system/config")

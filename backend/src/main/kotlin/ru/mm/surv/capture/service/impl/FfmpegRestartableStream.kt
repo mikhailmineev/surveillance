@@ -4,6 +4,7 @@ import org.springframework.context.annotation.Primary
 import org.springframework.beans.factory.ObjectFactory
 import org.springframework.stereotype.Service
 import ru.mm.surv.capture.service.FfmpegStream
+import ru.mm.surv.dto.StreamStatus
 import java.io.File
 import javax.annotation.PreDestroy
 
@@ -15,7 +16,7 @@ class FfmpegRestartableStream(
 
     @Synchronized
     override fun start() {
-        if (!isActive()) {
+        if (status() == StreamStatus.STOPPED) {
             ffmpegMultiStream = ffmpegMultiStreamFactory.getObject()
         }
         ffmpegMultiStream!!.start()
@@ -24,17 +25,18 @@ class FfmpegRestartableStream(
     @PreDestroy
     @Synchronized
     override fun stop() {
-        if (isActive()) {
+        if (status() == StreamStatus.RUNNING) {
             ffmpegMultiStream!!.stop()
             ffmpegMultiStream = null
+
         }
     }
 
-    override fun isActive(): Boolean {
-        if (ffmpegMultiStream != null && !ffmpegMultiStream!!.isActive()) {
-            ffmpegMultiStream = null
+    override fun status(): StreamStatus {
+        if (ffmpegMultiStream == null) {
+            return StreamStatus.STOPPED
         }
-        return ffmpegMultiStream != null
+        return ffmpegMultiStream!!.status()
     }
 
     override fun streamNames(): Collection<String> {

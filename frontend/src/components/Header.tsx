@@ -2,17 +2,48 @@ import Container from 'react-bootstrap/Container';
 import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
 import Button from "react-bootstrap/Button";
-import { useEffect, useState } from "react";
-import { SystemInfo, UserRole} from "../types/types";
-import { useKeycloak } from "@react-keycloak/web";
-import { Link } from "react-router-dom"
 import * as React from "react";
+import {useEffect, useState} from "react";
+import {StreamButtonsType, StreamStatus, SystemInfo, UserRole} from "../types/types";
+import {useKeycloak} from "@react-keycloak/web";
+import {Link} from "react-router-dom"
 import {useCurrentUser} from "../hooks/CurrentUserHook";
 
 export default () => {
     const [systemInfo, setSystemInfo] = useState<SystemInfo | undefined>(undefined);
     const { keycloak } = useKeycloak();
     const currentUser = useCurrentUser();
+
+    const streamButtons: StreamButtonsType = {
+        STARTING: {
+            variant: "primary",
+            onClick: () => {},
+            disabled: true,
+            text: "Stream starting",
+            nextStatus: StreamStatus.RUNNING
+        },
+        RUNNING: {
+            variant: "danger",
+            onClick: () => changeStreamState("stop"),
+            disabled: false,
+            text: "Stop stream",
+            nextStatus: StreamStatus.STOPPING
+        },
+        STOPPING: {
+            variant: "danger",
+            onClick: () => {},
+            disabled: true,
+            text: "Stream stopping",
+            nextStatus: StreamStatus.STOPPED
+        },
+        STOPPED: {
+            variant: "primary",
+            onClick: () => changeStreamState("start"),
+            disabled: false,
+            text: "Start stream",
+            nextStatus: StreamStatus.STARTING
+        }
+    }
 
     useEffect(() => {
         const fetchData = async () => {
@@ -38,7 +69,7 @@ export default () => {
         })
         if (systemInfo !== undefined) {
             let newSystemInfo = {
-                streamActive: !systemInfo.streamActive
+                streamStatus: streamButtons[systemInfo.streamStatus].nextStatus
             }
             setSystemInfo(newSystemInfo)
         }
@@ -76,11 +107,14 @@ export default () => {
                                 Logout ({currentUser.preferredUsername})
                             </Button>
                         )}
-                        { currentUser.hasRole(UserRole.ADMIN) && systemInfo?.streamActive === false &&
-                            <Button className="mr-2" variant="primary" onClick={() => changeStreamState("start")}>Start stream</Button>
-                        }
-                        { currentUser.hasRole(UserRole.ADMIN) && systemInfo?.streamActive === true &&
-                            <Button className="mr-2" variant="danger" onClick={() => changeStreamState("stop")}>Stop stream</Button>
+                        { currentUser.hasRole(UserRole.ADMIN) && systemInfo?.streamStatus !== undefined &&
+                            <Button
+                                className="mr-2"
+                                variant={streamButtons[systemInfo.streamStatus].variant}
+                                onClick={streamButtons[systemInfo.streamStatus].onClick}
+                                disabled={streamButtons[systemInfo.streamStatus].disabled}>
+                                {streamButtons[systemInfo.streamStatus].text}
+                            </Button>
                         }
                     </Container>
                 </Navbar.Collapse>

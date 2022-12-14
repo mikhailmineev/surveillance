@@ -1,7 +1,7 @@
 package ru.mm.surv.capture
 
 import org.junit.jupiter.api.Assertions
-import ru.mm.surv.capture.service.FfmpegInstaller
+import ru.mm.surv.capture.ffmpeg.installer.FfmpegInstaller
 import org.junit.jupiter.api.BeforeEach
 import org.mockito.Mockito
 import org.junit.jupiter.api.Test

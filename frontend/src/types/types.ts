@@ -1,3 +1,5 @@
+import {MouseEventHandler} from "react";
+
 export enum UserRole {
     CONSUMER = "CONSUMER",
     PUBLISHER = "PUBLISHER",
@@ -17,6 +19,18 @@ export interface Actuator {
 export interface ActuatorEntry {
     href: string,
     templated: boolean
+}
+
+export type StreamButtonsType = {
+    [index in StreamStatus]: StreamButtonType
+}
+
+export type StreamButtonType = {
+    variant: string,
+    onClick: MouseEventHandler<HTMLButtonElement>,
+    disabled: boolean,
+    text: string,
+    nextStatus: StreamStatus
 }
 
 export interface SystemConfig {
@@ -50,7 +64,14 @@ export interface InputFormat {
 }
 
 export interface SystemInfo {
-    streamActive: boolean
+    streamStatus: StreamStatus
+}
+
+export enum StreamStatus {
+    STARTING = "STARTING",
+    RUNNING = "RUNNING",
+    STOPPING = "STOPPING",
+    STOPPED = "STOPPED"
 }
 
 export interface StreamRecord {

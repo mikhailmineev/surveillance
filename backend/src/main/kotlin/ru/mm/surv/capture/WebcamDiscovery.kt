@@ -3,7 +3,7 @@ package ru.mm.surv.capture
 import ru.mm.surv.capture.config.CurrentPlatform.get
 import ru.mm.surv.capture.config.InputFormatFactory.fromWinLine
 import lombok.extern.slf4j.Slf4j
-import ru.mm.surv.capture.service.FfmpegInstaller
+import ru.mm.surv.capture.ffmpeg.installer.FfmpegInstaller
 import java.lang.Process
 import org.springframework.stereotype.Component
 import ru.mm.surv.capture.config.*

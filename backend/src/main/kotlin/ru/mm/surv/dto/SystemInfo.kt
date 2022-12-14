@@ -1,5 +1,5 @@
 package ru.mm.surv.dto
 
 data class SystemInfo(
-    val streamActive: Boolean
+    val streamStatus: StreamStatus
 )

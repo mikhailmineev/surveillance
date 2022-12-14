@@ -1,4 +1,4 @@
-package ru.mm.surv.capture.service.impl
+package ru.mm.surv.capture.ffmpeg.executor
 
 import lombok.extern.slf4j.Slf4j
 import org.slf4j.LoggerFactory

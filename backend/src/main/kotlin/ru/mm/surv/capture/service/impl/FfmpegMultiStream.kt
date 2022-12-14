@@ -4,14 +4,22 @@ import ru.mm.surv.capture.config.CurrentPlatform.get
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Scope
+import org.springframework.scheduling.TaskScheduler
 import org.springframework.stereotype.Service
 import ru.mm.surv.capture.config.FolderConfig
 import ru.mm.surv.config.Users
 import ru.mm.surv.capture.repository.WebcamRepository
-import ru.mm.surv.capture.service.FfmpegInstaller
+import ru.mm.surv.capture.ffmpeg.installer.FfmpegInstaller
 import ru.mm.surv.capture.service.FfmpegStream
+import ru.mm.surv.capture.ffmpeg.executor.FfmpegExecutor
+import ru.mm.surv.capture.ffmpeg.executor.impl.FfmpegExecutorImpl
+import ru.mm.surv.capture.ffmpeg.feature.impl.*
+import ru.mm.surv.dto.StreamStatus
+import ru.mm.surv.dto.aggregatedStreamStatus
 import java.util.HashMap
 import java.io.File
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 @Service
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
@@ -20,27 +28,37 @@ class FfmpegMultiStream(
     @Value("\${ffmpeg.publisher}") private val publisher: String,
     private val users: Users,
     private val webcamRepository: WebcamRepository,
-    private val ffmpegInstaller: FfmpegInstaller
+    private val ffmpegInstaller: FfmpegInstaller,
+    private val scheduler: TaskScheduler
 ) : FfmpegStream {
 
-    private val recorders: MutableMap<String, FfmpegSingleStream> = HashMap()
+    private val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss")
+    private val recorders: MutableMap<String, FfmpegExecutor> = HashMap()
 
     @Synchronized
-    private fun remove(stream: FfmpegSingleStream) {
+    private fun remove(stream: FfmpegExecutor) {
         recorders.remove(stream.getName())
     }
 
     @Synchronized
     override fun start() {
         val publishUser = users.users[publisher]?: throw RuntimeException("User $publisher not found in users list")
+        val currentDate = LocalDateTime.now().format(dateTimeFormatter)
         webcamRepository.all().forEach {
-            recorders[it.name] = FfmpegSingleStream(
-                get(),
+            val features = listOf(
+                WebcamStreamInput(it, get()),
+                WebmStreamOutput(it, publishUser),
+                HlsStreamOutput(it, folders),
+                Mp4FileOutput(it, folders, currentDate),
+                Mp4ThumbOutput(it, folders, currentDate),
+                StreamThumbOutput(it, folders)
+            )
+            recorders[it.name] = FfmpegExecutorImpl(
                 ffmpegInstaller,
                 it,
-                folders,
-                publishUser
-            ) { stream: FfmpegSingleStream -> this.remove(stream) }
+                scheduler,
+                features
+            ) { status, stream -> if (status == StreamStatus.STOPPED) this.remove(stream) }
         }
     }
 
@@ -50,8 +68,8 @@ class FfmpegMultiStream(
     }
 
     @Synchronized
-    override fun isActive(): Boolean {
-        return recorders.values.stream().anyMatch { it.isActive() }
+    override fun status(): StreamStatus {
+        return aggregatedStreamStatus(recorders.values.map(FfmpegExecutor::getStatus))
     }
 
     @Synchronized

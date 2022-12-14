@@ -1,4 +1,4 @@
-package ru.mm.surv.capture.service.impl
+package ru.mm.surv.capture.ffmpeg.executor
 
 import java.lang.Process
 import java.lang.Runnable

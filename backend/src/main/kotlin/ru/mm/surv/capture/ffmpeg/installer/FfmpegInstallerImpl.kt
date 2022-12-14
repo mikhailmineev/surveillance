@@ -1,10 +1,9 @@
-package ru.mm.surv.capture.service.impl
+package ru.mm.surv.capture.ffmpeg.installer
 
 import lombok.extern.slf4j.Slf4j
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.core.io.Resource
-import ru.mm.surv.capture.service.FfmpegInstaller
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver
 import org.springframework.stereotype.Service
 import ru.mm.surv.capture.config.CurrentPlatform
