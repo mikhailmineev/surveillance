@@ -7,5 +7,6 @@ interface FfmpegExecutor {
     fun getName(): String
     fun getThumb(): File?
     fun getStatus(): StreamStatus
+    fun start()
     fun stop()
 }

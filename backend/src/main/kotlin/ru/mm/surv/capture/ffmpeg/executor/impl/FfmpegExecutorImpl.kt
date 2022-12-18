@@ -26,18 +26,18 @@ private const val HEALTH_CHECK_MILLIS = 100L
 private const val STOP_FORCIBLY_SECONDS = 10L
 
 class FfmpegExecutorImpl(
-    ffmpegInstaller: FfmpegInstaller,
+    private val ffmpegInstaller: FfmpegInstaller,
     private val captureConfig: CameraConfig,
-    scheduler: TaskScheduler,
-    ffmpegFeatures: List<Feature>,
-    private val statusListener: BiConsumer<StreamStatus, FfmpegExecutor>,
+    private val scheduler: TaskScheduler,
+    private val ffmpegFeatures: List<Feature>,
+    private val statusListener: List<BiConsumer<StreamStatus, FfmpegExecutor>>,
 ) : FfmpegExecutor {
 
-    private val logger: ScheduledFuture<*>
-    private val livenessChecker: ScheduledFuture<*>
     private val log = LoggerFactory.getLogger(FfmpegExecutor::class.java)
     private val streamThumb: Path?
-    private val process: Process
+    private lateinit var process: Process
+    private lateinit var logger: ScheduledFuture<*>
+    private lateinit var livenessChecker: ScheduledFuture<*>
 
     private var status: StreamStatus = StreamStatus.STOPPED
 
@@ -53,23 +53,9 @@ class FfmpegExecutorImpl(
         return status
     }
 
-    override fun stop() {
-        if (status == StreamStatus.STOPPED || status == StreamStatus.STOPPING) {
-            log.info("Stream ${captureConfig.name} already in status $status")
-            return
-        }
-        log.info("Stopping stream {}", captureConfig.name)
-        setStatus(StreamStatus.STOPPING)
-        PrintStream(process.outputStream).use { printStream -> printStream.print("q"); printStream.flush() }
-        if (!process.waitFor(STOP_FORCIBLY_SECONDS, TimeUnit.SECONDS)) {
-            log.error("Waiting too long for stream ${captureConfig.name} to stop")
-            process.destroyForcibly()
-        }
-    }
-
     private fun setStatus(status: StreamStatus) {
         this.status = status
-        statusListener.accept(status, this)
+        statusListener.forEach { it.accept(status, this) }
         log.info("Stream status updated $status")
     }
 
@@ -78,7 +64,7 @@ class FfmpegExecutorImpl(
         if (errorCode != 0) {
             log.error("Stream stopped with error code $errorCode")
         } else {
-            log.info("Stream stopped")
+            log.info("Stream stopped gracefully")
         }
         logger.cancel(false)
         livenessChecker.cancel(false)
@@ -86,8 +72,11 @@ class FfmpegExecutorImpl(
     }
 
     init {
-        setStatus(StreamStatus.STARTING)
         streamThumb = ffmpegFeatures.filterIsInstance<StreamThumbOutput>().firstOrNull()?.path
+    }
+
+    override fun start() {
+        setStatus(StreamStatus.STARTING)
         var args = arrayOf(
             ffmpegInstaller.path().toString(),
         )
@@ -104,5 +93,19 @@ class FfmpegExecutorImpl(
             Duration.ofMillis(HEALTH_CHECK_MILLIS)
         )
         setStatus(StreamStatus.RUNNING)
+    }
+
+    override fun stop() {
+        if (status == StreamStatus.STOPPED || status == StreamStatus.STOPPING) {
+            log.info("Stream ${captureConfig.name} already in status $status")
+            return
+        }
+        log.info("Stopping stream {}", captureConfig.name)
+        setStatus(StreamStatus.STOPPING)
+        PrintStream(process.outputStream).use { printStream -> printStream.print("q"); printStream.flush() }
+        if (!process.waitFor(STOP_FORCIBLY_SECONDS, TimeUnit.SECONDS)) {
+            log.error("Waiting too long for stream ${captureConfig.name} to stop")
+            process.destroyForcibly()
+        }
     }
 }

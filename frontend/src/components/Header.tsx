@@ -8,11 +8,16 @@ import {StreamButtonsType, StreamStatus, SystemInfo, UserRole} from "../types/ty
 import {useKeycloak} from "@react-keycloak/web";
 import {Link} from "react-router-dom"
 import {useCurrentUser} from "../hooks/CurrentUserHook";
+import useWebSocket from "react-use-websocket";
 
 export default () => {
     const [systemInfo, setSystemInfo] = useState<SystemInfo | undefined>(undefined);
     const { keycloak } = useKeycloak();
     const currentUser = useCurrentUser();
+    const [socketUrl, setSocketUrl] = useState("");
+    const { lastJsonMessage } = useWebSocket(socketUrl, {
+        shouldReconnect: () => true
+    })
 
     const streamButtons: StreamButtonsType = {
         STARTING: {
@@ -60,19 +65,32 @@ export default () => {
         fetchData()
     }, [currentUser.isAuthenticated])
 
+    useEffect(() => {
+        if (currentUser.isAuthenticated) {
+            let wsRoot = `${(window.location.protocol === "https:") ? "wss://" : "ws://"}${window.location.host}`
+            setSocketUrl(`${wsRoot}/api/ws?access_token=${keycloak.token}`)
+        }
+    }, [currentUser.isAuthenticated])
+
+    useEffect(() => {
+        if (lastJsonMessage !== null) {
+            setSystemInfo(lastJsonMessage)
+        }
+    }, [lastJsonMessage]);
+
     const changeStreamState = async (mode: "start" | "stop") => {
-        await fetch(`/api/stream/control/${mode}`, {
-            method: 'POST',
-            headers: {
-                "Authorization": "Bearer " + keycloak.token
-            }
-        })
         if (systemInfo !== undefined) {
             let newSystemInfo = {
                 streamStatus: streamButtons[systemInfo.streamStatus].nextStatus
             }
             setSystemInfo(newSystemInfo)
         }
+        await fetch(`/api/stream/control/${mode}`, {
+            method: 'POST',
+            headers: {
+                "Authorization": "Bearer " + keycloak.token
+            }
+        })
     }
 
     return (

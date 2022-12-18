@@ -39,6 +39,7 @@ class ApiTokenSecurityConfig @Autowired constructor(
             .antMatchers("/stream/control/**").hasRole(UserRole.ADMIN.toString())
             .antMatchers("/stream/**").hasRole(UserRole.CONSUMER.toString())
             .antMatchers("/record/**").hasRole(UserRole.CONSUMER.toString())
+            .antMatchers("/ws/**").hasRole(UserRole.CONSUMER.toString())
             .antMatchers("/system/config/**").hasRole(UserRole.ADMIN.toString())
             .antMatchers("/system/**").hasRole(UserRole.CONSUMER.toString())
             .anyRequest().authenticated()

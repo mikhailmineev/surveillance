@@ -1,12 +1,15 @@
 package ru.mm.surv.capture.service.impl
 
+import org.springframework.beans.factory.annotation.Qualifier
 import ru.mm.surv.capture.config.CurrentPlatform.get
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.context.annotation.Scope
 import org.springframework.scheduling.TaskScheduler
 import org.springframework.stereotype.Service
 import ru.mm.surv.capture.config.FolderConfig
+import ru.mm.surv.capture.event.StreamStatusEvent
 import ru.mm.surv.config.Users
 import ru.mm.surv.capture.repository.WebcamRepository
 import ru.mm.surv.capture.ffmpeg.installer.FfmpegInstaller
@@ -20,6 +23,7 @@ import java.util.HashMap
 import java.io.File
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.function.BiConsumer
 
 @Service
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
@@ -29,7 +33,8 @@ class FfmpegMultiStream(
     private val users: Users,
     private val webcamRepository: WebcamRepository,
     private val ffmpegInstaller: FfmpegInstaller,
-    private val scheduler: TaskScheduler
+    @Qualifier("taskScheduler") private val scheduler: TaskScheduler,
+    private val eventPublisher: ApplicationEventPublisher
 ) : FfmpegStream {
 
     private val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss")
@@ -53,13 +58,21 @@ class FfmpegMultiStream(
                 Mp4ThumbOutput(it, folders, currentDate),
                 StreamThumbOutput(it, folders)
             )
+            val listeners: List<BiConsumer<StreamStatus, FfmpegExecutor>> = listOf(
+                BiConsumer { _, _ ->
+                    eventPublisher.publishEvent(StreamStatusEvent(status(), this)) },
+                BiConsumer { status, stream ->
+                    if (status == StreamStatus.STOPPED) this.remove(stream) }
+            )
             recorders[it.name] = FfmpegExecutorImpl(
                 ffmpegInstaller,
                 it,
                 scheduler,
-                features
-            ) { status, stream -> if (status == StreamStatus.STOPPED) this.remove(stream) }
+                features,
+                listeners
+            )
         }
+        recorders.forEach { (_, ffmpeg) -> ffmpeg.start() }
     }
 
     @Synchronized
