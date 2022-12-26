@@ -38,7 +38,7 @@ export const WebSocketProvider = ({ children } : {children : JSX.Element}) => {
             let wsRoot = `${(window.location.protocol === "https:") ? "wss://" : "ws://"}${window.location.host}`
             setSocketUrl(`${wsRoot}/api/ws?access_token=${keycloak.token}`)
         }
-    }, [keycloak.authenticated])
+    }, [keycloak.token])
 
     useEffect(() => {
         if (lastJsonMessage !== null) {

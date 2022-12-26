@@ -4,14 +4,14 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 import keycloak from "./keycloak";
 import { ReactKeycloakProvider } from '@react-keycloak/web'
-import keycloakOptions from "./keycloakOptions";
+import keycloakOptions, {setTokens} from "./keycloakOptions";
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
 
 root.render(
-    <ReactKeycloakProvider authClient={keycloak} initOptions={keycloakOptions} >
+    <ReactKeycloakProvider authClient={keycloak} onTokens={setTokens} initOptions={keycloakOptions} >
         <React.StrictMode>
             <App />
         </React.StrictMode>
