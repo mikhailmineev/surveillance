@@ -40,14 +40,14 @@ class ApiTokenSecurityConfig @Autowired constructor(
             .antMatchers("/stream/**").hasRole(UserRole.CONSUMER.toString())
             .antMatchers("/record/**").hasRole(UserRole.CONSUMER.toString())
             .antMatchers("/ws/**").hasRole(UserRole.CONSUMER.toString())
-            .antMatchers("/system/config/**").hasRole(UserRole.ADMIN.toString())
+            .antMatchers("/config/**").hasRole(UserRole.ADMIN.toString())
             .antMatchers("/system/**").hasRole(UserRole.CONSUMER.toString())
             .anyRequest().authenticated()
             .and()
             .formLogin().disable()
             .logout().disable()
-            .oauth2ResourceServer {
-                it.jwt {
+            .oauth2ResourceServer { server ->
+                server.jwt {
                     it.decoder(jwtDecoder())
                     it.jwtAuthenticationConverter(jwtAuthenticationConverter())
                 }

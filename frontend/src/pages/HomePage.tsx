@@ -1,23 +1,16 @@
 import * as React from 'react'
-import {useEffect, useState} from 'react'
+import {useContext, useEffect, useState} from 'react'
 import {useKeycloak} from "@react-keycloak/web";
-import {Stream, StreamRecord, StreamRecordVideo} from "../types/types";
+import {StreamRecord, StreamRecordVideo} from "../types/types";
+import {WebSocketContext} from "../contexts/WebSocketContext";
 
 export default () => {
-    const [stream, setStream] = useState<Stream | undefined>(undefined)
     const [records, setRecords] = useState<StreamRecord[]>([])
     const { keycloak } = useKeycloak();
+    const stream = useContext(WebSocketContext)
 
     useEffect(() => {
         const fetchData = async () => {
-            let rawStreamData = await fetch("/api/stream", {
-                headers: {
-                    "Authorization": "Bearer " + keycloak.token
-                }
-            })
-            let streamData = await rawStreamData.json()
-            setStream(streamData)
-
             let rawRecordsData = await fetch("/api/record/mp4", {
                 headers: {
                     "Authorization": "Bearer " + keycloak.token
