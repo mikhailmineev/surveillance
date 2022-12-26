@@ -63,8 +63,9 @@ export interface InputFormat {
     fps: string
 }
 
-export interface SystemInfo {
-    streamStatus: StreamStatus
+export interface Stream {
+    streamStatus: StreamStatus,
+    streams: string[]
 }
 
 export enum StreamStatus {

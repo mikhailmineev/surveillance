@@ -8,14 +8,15 @@ import ru.mm.surv.capture.service.FfmpegStream
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.ResponseStatus
+import ru.mm.surv.dto.StreamInfo
 
 @RestController
 @RequestMapping("stream")
 class StreamController @Autowired constructor(private val ffmpegStream: FfmpegStream) {
 
     @GetMapping
-    fun streams(): Collection<String> {
-        return ffmpegStream.streamNames()
+    fun streams(): StreamInfo {
+        return StreamInfo(ffmpegStream.status(), ffmpegStream.streamNames())
     }
 
     @PostMapping("control/start")

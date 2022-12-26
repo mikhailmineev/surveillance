@@ -9,7 +9,7 @@ export default () => {
 
     useEffect(() => {
         const fetchData = async () => {
-            let rawConfigData = await fetch("/api/system/config", {
+            let rawConfigData = await fetch("/api/config", {
                 headers: {
                     "Authorization": "Bearer " + keycloak.token
                 }

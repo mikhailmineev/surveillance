@@ -60,7 +60,7 @@ class FfmpegMultiStream(
             )
             val listeners: List<BiConsumer<StreamStatus, FfmpegExecutor>> = listOf(
                 BiConsumer { _, _ ->
-                    eventPublisher.publishEvent(StreamStatusEvent(status(), this)) },
+                    eventPublisher.publishEvent(StreamStatusEvent(status(), streamNames(), this)) },
                 BiConsumer { status, stream ->
                     if (status == StreamStatus.STOPPED) this.remove(stream) }
             )

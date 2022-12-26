@@ -1,10 +1,10 @@
 import * as React from 'react'
-import {useEffect, useState} from "react";
+import {useEffect, useState} from 'react'
 import {useKeycloak} from "@react-keycloak/web";
-import {StreamRecord, StreamRecordVideo} from "../types/types";
+import {Stream, StreamRecord, StreamRecordVideo} from "../types/types";
 
 export default () => {
-    const [streams, setStreams] = useState<string[]>([])
+    const [stream, setStream] = useState<Stream | undefined>(undefined)
     const [records, setRecords] = useState<StreamRecord[]>([])
     const { keycloak } = useKeycloak();
 
@@ -16,7 +16,7 @@ export default () => {
                 }
             })
             let streamData = await rawStreamData.json()
-            setStreams(streamData)
+            setStream(streamData)
 
             let rawRecordsData = await fetch("/api/record/mp4", {
                 headers: {
@@ -61,20 +61,20 @@ export default () => {
             <h1>Streams</h1>
             <h2>Running streams</h2>
             <div id="streams" className="row">
-                { (streams?.length === 0 ?? false) &&
-                    <p className="text-muted">No streams running</p>
+                { (stream?.streams?.length === undefined || stream.streams.length === 0)
+                    ? <p className="text-muted">No streams running</p>
+                    : stream.streams.map(entry => {
+                        return (
+                            <div className="col-md">
+                                <h3>Camera <span>{entry}</span></h3>
+                                <video poster={`/api/stream/thumb/${entry}/thumb.jpg?access_token=${keycloak.token}`} controls style={videoStyle}>
+                                    <source src={`/api/stream/webm/${entry}/stream.webm?access_token=${keycloak.token}`} type="video/webm" />
+                                    <source src={`/api/stream/hls/${entry}/stream.m3u8?access_token=${keycloak.token}`} type="application/vnd.apple.mpegurl" />
+                                </video>
+                            </div>
+                        )
+                    })
                 }
-                { streams.map(entry => {
-                    return (
-                        <div className="col-md">
-                            <h3>Camera <span>{entry}</span></h3>
-                            <video poster={`/api/stream/thumb/${entry}/thumb.jpg?access_token=${keycloak.token}`} controls style={videoStyle}>
-                                <source src={`/api/stream/webm/${entry}/stream.webm?access_token=${keycloak.token}`} type="video/webm" />
-                                <source src={`/api/stream/hls/${entry}/stream.m3u8?access_token=${keycloak.token}`} type="application/vnd.apple.mpegurl" />
-                            </video>
-                        </div>
-                    )
-                })}
             </div>
             <h2>Old records</h2>
             <div id="records">
