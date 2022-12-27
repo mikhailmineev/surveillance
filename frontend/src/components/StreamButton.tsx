@@ -2,6 +2,8 @@ import Button from "react-bootstrap/Button";
 import * as React from "react";
 import {StreamButtonsType, StreamStatus} from "../types/types";
 import {useKeycloak} from "@react-keycloak/web";
+import {useContext} from "react";
+import {WebSocketContext} from "../contexts/WebSocketContext";
 
 const streamButtons: StreamButtonsType = {
     STARTING: {
@@ -34,8 +36,9 @@ const streamButtons: StreamButtonsType = {
     }
 }
 
-export default ({status} : {status: StreamStatus}) => {
-    const { keycloak } = useKeycloak();
+export default () => {
+    const { keycloak } = useKeycloak()
+    const stream = useContext(WebSocketContext)
 
     const changeStreamState = async (mode: "start" | "stop" | undefined) => {
         if (mode === undefined) {
@@ -49,14 +52,16 @@ export default ({status} : {status: StreamStatus}) => {
         })
     }
 
+    if (stream === undefined) {
+        return null
+    }
     return (
         <Button
             className="mr-2"
-            variant={streamButtons[status].variant}
-            onClick={() => changeStreamState(streamButtons[status].action)}
-            disabled={streamButtons[status].disabled}>
-            {streamButtons[status].text}
+            variant={streamButtons[stream.streamStatus].variant}
+            onClick={() => changeStreamState(streamButtons[stream.streamStatus].action)}
+            disabled={streamButtons[stream.streamStatus].disabled}>
+            {streamButtons[stream.streamStatus].text}
         </Button>
     )
-
 }

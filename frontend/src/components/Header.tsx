@@ -3,18 +3,16 @@ import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
 import Button from "react-bootstrap/Button";
 import * as React from "react";
-import {useContext} from "react";
 import {UserRole} from "../types/types";
 import {useKeycloak} from "@react-keycloak/web";
 import {Link} from "react-router-dom"
 import {useCurrentUser} from "../hooks/CurrentUserHook";
-import {WebSocketContext} from "../contexts/WebSocketContext";
 import StreamButton from "./StreamButton";
+import Protected from "./Protected";
 
 export default () => {
-    const { keycloak } = useKeycloak();
-    const currentUser = useCurrentUser();
-    const stream = useContext(WebSocketContext)
+    const { keycloak } = useKeycloak()
+    const currentUser = useCurrentUser()
 
     return (
         <Navbar bg="light" expand="md">
@@ -26,31 +24,31 @@ export default () => {
                         <Nav.Item as="li">
                             <Nav.Link as={Link} to="/">Streams</Nav.Link>
                         </Nav.Item>
-                        { currentUser.hasRole(UserRole.ADMIN) &&
+                        <Protected role={UserRole.ADMIN}>
                             <Nav.Item as="li">
                                 <Nav.Link as={Link} to="/configure">Configure</Nav.Link>
                             </Nav.Item>
-                        }
-                        { currentUser.hasRole(UserRole.ADMIN) &&
+                        </Protected>
+                        <Protected role={UserRole.ADMIN}>
                             <Nav.Item as="li">
                                 <Nav.Link as={Link} to="/actuator">Actuator</Nav.Link>
                             </Nav.Item>
-                        }
+                        </Protected>
                     </Nav>
                     <Container fluid className="p-0 d-flex justify-content-between flex-row-reverse">
-                        { !currentUser.isAuthenticated && (
+                        <Protected>
                             <Button variant="outline-primary" onClick={() => keycloak.login()}>
                                 Login
                             </Button>
-                        )}
-                        { currentUser.isAuthenticated && (
+                        </Protected>
+                        <Protected>
                             <Button variant="outline-primary" onClick={() => keycloak.logout()}>
                                 Logout ({currentUser.preferredUsername})
                             </Button>
-                        )}
-                        { currentUser.hasRole(UserRole.ADMIN) && stream?.streamStatus !== undefined &&
-                            <StreamButton status={stream.streamStatus} />
-                        }
+                        </Protected>
+                        <Protected role={UserRole.ADMIN}>
+                            <StreamButton />
+                        </Protected>
                     </Container>
                 </Navbar.Collapse>
             </Container>
