@@ -27,7 +27,7 @@ export type StreamButtonsType = {
 
 export type StreamButtonType = {
     variant: string,
-    onClick: MouseEventHandler<HTMLButtonElement>,
+    action: "start" | "stop" | undefined,
     disabled: boolean,
     text: string,
     nextStatus: StreamStatus

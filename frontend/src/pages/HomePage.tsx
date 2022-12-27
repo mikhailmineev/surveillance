@@ -38,15 +38,16 @@ export default () => {
             }
         })
 
-        let recordsCopy: StreamRecord[] = []
-        records.forEach(record => {
-            let recordVideosCopy = record.videos.filter(e => e !== video)
-            if (recordVideosCopy.length > 0) {
-                recordsCopy.push({date: record.date, videos: recordVideosCopy});
-            }
+        setRecords((prevState) => {
+            let recordsCopy: StreamRecord[] = []
+            prevState.forEach(record => {
+                let recordVideosCopy = record.videos.filter(e => e !== video)
+                if (recordVideosCopy.length > 0) {
+                    recordsCopy.push({date: record.date, videos: recordVideosCopy});
+                }
+            })
+            return recordsCopy
         })
-
-        setRecords(recordsCopy)
     }
 
     return (

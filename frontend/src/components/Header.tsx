@@ -4,56 +4,17 @@ import Navbar from 'react-bootstrap/Navbar';
 import Button from "react-bootstrap/Button";
 import * as React from "react";
 import {useContext} from "react";
-import {StreamButtonsType, StreamStatus, UserRole} from "../types/types";
+import {UserRole} from "../types/types";
 import {useKeycloak} from "@react-keycloak/web";
 import {Link} from "react-router-dom"
 import {useCurrentUser} from "../hooks/CurrentUserHook";
 import {WebSocketContext} from "../contexts/WebSocketContext";
+import StreamButton from "./StreamButton";
 
 export default () => {
     const { keycloak } = useKeycloak();
     const currentUser = useCurrentUser();
     const stream = useContext(WebSocketContext)
-
-    const streamButtons: StreamButtonsType = {
-        STARTING: {
-            variant: "primary",
-            onClick: () => {},
-            disabled: true,
-            text: "Stream starting",
-            nextStatus: StreamStatus.RUNNING
-        },
-        RUNNING: {
-            variant: "danger",
-            onClick: () => changeStreamState("stop"),
-            disabled: false,
-            text: "Stop stream",
-            nextStatus: StreamStatus.STOPPING
-        },
-        STOPPING: {
-            variant: "danger",
-            onClick: () => {},
-            disabled: true,
-            text: "Stream stopping",
-            nextStatus: StreamStatus.STOPPED
-        },
-        STOPPED: {
-            variant: "primary",
-            onClick: () => changeStreamState("start"),
-            disabled: false,
-            text: "Start stream",
-            nextStatus: StreamStatus.STARTING
-        }
-    }
-
-    const changeStreamState = async (mode: "start" | "stop") => {
-        await fetch(`/api/stream/control/${mode}`, {
-            method: 'POST',
-            headers: {
-                "Authorization": "Bearer " + keycloak.token
-            }
-        })
-    }
 
     return (
         <Navbar bg="light" expand="md">
@@ -88,13 +49,7 @@ export default () => {
                             </Button>
                         )}
                         { currentUser.hasRole(UserRole.ADMIN) && stream?.streamStatus !== undefined &&
-                            <Button
-                                className="mr-2"
-                                variant={streamButtons[stream.streamStatus].variant}
-                                onClick={streamButtons[stream.streamStatus].onClick}
-                                disabled={streamButtons[stream.streamStatus].disabled}>
-                                {streamButtons[stream.streamStatus].text}
-                            </Button>
+                            <StreamButton status={stream.streamStatus} />
                         }
                     </Container>
                 </Navbar.Collapse>
