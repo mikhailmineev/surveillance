@@ -33,6 +33,9 @@ if [ ! -f "keystore.jks" ]; then
     echo "KC_HTTPS_KEY_STORE_PASSWORD=$PASSWORD" >> ".env"
     echo "KEYCLOAK_ADMIN_PASSWORD=$PASSWORD" >> ".env"
 
+    echo "auth.users.user1.username=publisher" >> "application.properties"
+    echo "auth.users.user1.password=$PASSWORD" >> "application.properties"
+    echo "auth.users.user1.role=PUBLISHER" >> "application.properties"
     echo "server.ssl.key-store-password=$PASSWORD" >> "application.properties"
     echo "client.ssl.trust-store-password=$PASSWORD" >> "application.properties"
 

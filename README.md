@@ -1,38 +1,24 @@
-# Сервис стриминга веб камер
-## Запуск
-### Через maven
+# Webcam streaming service
+## Launch
 
 ```bash
-run
+sh run.sh
 ```
 
-## Первый запуск
+Service should become accessible from https://localhost:443
+
+## First launch
 
 ```bash
 sh first_configure.sh
+sh run.sh
 ```
 
-Создать файл `application.properties`. Заполнить файл содержимым ниже, заменив `******` на пароли
+### Add webcam
 
-Команда для создания файла, запускать в корне проекта
-
-```bash
-"auth.users.user1.username=publisher
-auth.users.user1.password=*******
-auth.users.user1.role=PUBLISHER" >> backend/application.properties
-```
-
-Запустить проект
-
-Сервис будет доступен по https://localhost:443
-
-Зайти через администратора на сайт
-
-Зайти в панель "configure"
-
-В таблице доступных устройств взять названия нужных
-
-Добавить в `application.properties` конфигурацию захвата. Ниже пример для одной из камер
+- Open "configure" page
+- Find needed webcams
+- Add to `application.properties` config that looks like this:
 
 ```properties
 ffmpeg.recorder.first.name=first
@@ -43,4 +29,4 @@ ffmpeg.recorder.first.input_framerate=16
 ffmpeg.publisher=user1
 ```
 
-Перезапустить приложение
+- Restart app
